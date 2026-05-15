@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Prompt Assistant",
+  "version": "0.1",
+  "description": "A helper tool for writing better prompts.",
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "icons": {
+    "128": "icons/icon128.png"
+  }
+}
