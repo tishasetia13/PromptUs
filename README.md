@@ -4,14 +4,38 @@ A beginner-friendly Chrome extension built with Manifest V3.
 
 ---
 
+## Build log
+
+### Phase 0 — Extension skeleton ✅
+Basic working extension: popup loads, icon shows in toolbar, console log confirms it's alive.
+
+### Phase 1 — Platform detector ✅
+Added a content script (`content.js`) that runs on Midjourney.com and detects the current platform. The popup now queries the active tab and displays a colour-coded status badge:
+
+- **✅ Midjourney detected!** (green) — shown when the user is on midjourney.com
+- **❌ No supported AI platform detected on this tab** (red) — shown on all other pages
+
+**Files added / changed in Phase 1:**
+
+| File | What changed |
+|------|-------------|
+| `content.js` | New file. Detects the platform from `window.location.hostname` and listens for messages from the popup. |
+| `manifest.json` | Registered `content.js` as a content script for `*.midjourney.com`; added `activeTab` permission. |
+| `popup.js` | Queries the active tab, sends a `getPlatform` message to the content script, and updates the UI with the result. |
+| `popup.html` | Added `#platform-status` element that shows the detection result. |
+| `popup.css` | Styled `#platform-status` with a neutral default and green/red variants for detected/not-detected states. |
+
+---
+
 ## What each file does
 
 | File | Purpose |
 |------|---------|
-| `manifest.json` | The **ID card** of the extension. Chrome reads this first. It declares the name, version, which HTML file to use as the popup, and where the icon lives. |
+| `manifest.json` | The **ID card** of the extension. Chrome reads this first. It declares the name, version, which HTML file to use as the popup, which pages to inject scripts into, and where the icon lives. |
 | `popup.html` | The **page** that appears when you click the extension icon in the toolbar. Like any web page: HTML for structure, CSS for style, JS for behaviour. |
-| `popup.css` | **Styles** for the popup — sets the width, background colour, font, etc. |
-| `popup.js` | **JavaScript** that runs inside the popup. Currently just logs a message to the console. This is where you will add features later. |
+| `popup.css` | **Styles** for the popup — sets the width, background colour, font, and the platform status badge colours. |
+| `popup.js` | **JavaScript** that runs inside the popup. Asks the active tab which platform is detected and updates the status badge. |
+| `content.js` | **Content script** injected into Midjourney pages. Detects the platform and responds to messages from the popup. |
 | `icons/icon128.png` | The **toolbar icon** Chrome displays next to the address bar. 128 × 128 pixels. |
 
 ---
