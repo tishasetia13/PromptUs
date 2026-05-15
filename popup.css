@@ -13,3 +13,25 @@ h1 {
   font-size: 16px;
   color: #3b3b8a;
 }
+
+/* Base style for the platform status badge */
+#platform-status {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  background-color: #e8eaf6;
+  color: #555;
+}
+
+/* Applied by popup.js when a supported platform is found */
+#platform-status.detected {
+  background-color: #d4edda;
+  color: #1a5c2a;
+}
+
+/* Applied by popup.js when no supported platform is found */
+#platform-status.not-detected {
+  background-color: #fde8e8;
+  color: #7a1c1c;
+}
