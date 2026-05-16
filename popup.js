@@ -117,7 +117,7 @@ document.getElementById("intent-continue-btn").addEventListener("click", async (
   showQuestionsLoading();
 
   try {
-    const aiQuestions = await generateQuestions("Midjourney");
+    const aiQuestions = await generateQuestions("Midjourney", userIntent);
     hideQuestionsLoading();
     showQuestion(0, aiQuestions, userIntent);
   } catch (err) {
