@@ -1,37 +1,417 @@
-/* Set a comfortable size for the popup window */
+/* ── Base ── */
 body {
-  width: 280px;
+  width: 380px;
+  min-height: 280px;
   padding: 20px;
   font-family: sans-serif;
-  text-align: center;
+  text-align: left;
   background-color: #f0f4ff;
   margin: 0;
+  position: relative;
+  box-sizing: border-box;
 }
 
-/* Style the heading */
-h1 {
+/* ── Gear button ── */
+#settings-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
   font-size: 16px;
-  color: #3b3b8a;
+  color: #aaa;
+  padding: 4px;
+  line-height: 1;
 }
 
-/* Base style for the platform status badge */
+#settings-btn:hover {
+  color: #666;
+}
+
+/* ── WELCOME SECTION ── */
+#welcome-section {
+  text-align: center;
+  padding: 24px 0 8px;
+}
+
+/* Platform detection badge — lives inside welcome section */
 #platform-status {
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
   background-color: #e8eaf6;
   color: #555;
+  margin-bottom: 16px;
 }
 
-/* Applied by popup.js when a supported platform is found */
 #platform-status.detected {
   background-color: #d4edda;
   color: #1a5c2a;
 }
 
-/* Applied by popup.js when no supported platform is found */
 #platform-status.not-detected {
   background-color: #fde8e8;
   color: #7a1c1c;
+}
+
+#welcome-section h1 {
+  font-size: 22px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin: 0 0 10px;
+}
+
+.welcome-subtext {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 20px;
+}
+
+/* ── Primary action buttons (start, to-summary, generate) ── */
+#start-btn,
+#to-summary-btn {
+  width: 100%;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+#start-btn:hover,
+#to-summary-btn:hover {
+  background: #2563eb;
+}
+
+#generate-btn {
+  width: 100%;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+#generate-btn:hover {
+  background: #15803d;
+}
+
+/* ── Back buttons (shared class) ── */
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 12px;
+  padding: 0;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.back-btn:hover {
+  color: #555;
+}
+
+/* ── INTENT SECTION ── */
+#intent-section {
+  text-align: left;
+}
+
+#intent-section h2 {
+  font-size: 17px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin: 0 0 16px;
+}
+
+#intent-input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  padding: 12px 14px;
+  font-size: 14px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+
+#intent-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+#intent-continue-btn {
+  width: 100%;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+#intent-continue-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+#intent-continue-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── QUESTION SECTION ── */
+#question-section {
+  text-align: left;
+}
+
+#progress-text {
+  font-size: 12px;
+  color: #aaa;
+  margin: 0 0 8px;
+}
+
+#question-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin: 0 0 16px;
+}
+
+/* Option cards injected by mcq.js */
+.option-btn {
+  width: 100%;
+  background: white;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  display: block;
+}
+
+.option-btn:hover {
+  border-color: #3b82f6;
+  background: #f0f4ff;
+  color: #1a1a2e;
+}
+
+/* ── ANYTHING ELSE SECTION ── */
+#anything-else-section {
+  text-align: left;
+}
+
+#anything-else-section h2 {
+  font-size: 17px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin: 0 0 6px;
+}
+
+.section-subtext {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 12px;
+}
+
+#extra-input {
+  width: 100%;
+  height: 80px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 8px 10px;
+  font-size: 13px;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-bottom: 4px;
+}
+
+/* ── SUMMARY SECTION ── */
+#summary-section {
+  text-align: left;
+}
+
+#summary-section h2 {
+  font-size: 17px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin: 0 0 14px;
+}
+
+.summary-row {
+  margin-bottom: 12px;
+}
+
+.summary-label {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.summary-answer {
+  display: block;
+  font-size: 14px;
+  color: #1a1a2e;
+  font-weight: 500;
+}
+
+/* ── SETTINGS SCREEN ── */
+/* Negative margins let it fill edge-to-edge over body padding */
+#settings-screen {
+  display: none;
+  background: white;
+  padding: 20px;
+  margin: -20px;
+  text-align: left;
+}
+
+#settings-screen h2 {
+  font-size: 15px;
+  color: #3b3b8a;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+#api-key-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+#save-key-btn {
+  width: 100%;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#save-key-btn:hover {
+  background: #2563eb;
+}
+
+#save-status {
+  font-size: 12px;
+  color: #16a34a;
+  margin-top: 8px;
+  min-height: 18px;
+}
+
+#back-from-settings-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 13px;
+  padding: 0;
+}
+
+#back-from-settings-btn:hover {
+  color: #222;
+}
+
+/* ── Spinner ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Questions loading state ── */
+#questions-loading {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+#questions-loading p {
+  margin: 0;
+}
+
+/* ── Generate button loading state ── */
+#generate-btn.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ── Result section ── */
+#result-section {
+  margin-top: 20px;
+}
+
+#result-section h3 {
+  font-size: 13px;
+  font-weight: bold;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+
+#generated-prompt {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  user-select: text;
+  word-wrap: break-word;
+  color: #1a1a2e;
+}
+
+#copy-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+#copy-btn:hover {
+  background: #2563eb;
+}
+
+#copy-confirmation {
+  font-size: 12px;
+  color: #16a34a;
+  margin-left: 8px;
 }

@@ -3,16 +3,93 @@
   <head>
     <meta charset="UTF-8" />
     <title>Prompt Assistant</title>
-    <!-- Load our styles -->
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <h1 id="message">Prompt Assistant is alive 🎉</h1>
+    <!-- Gear icon — always in top-right of popup, hidden when on settings screen -->
+    <button id="settings-btn">⚙️</button>
 
-    <!-- Shows which AI platform is active on the current tab -->
-    <p id="platform-status">Checking platform...</p>
+    <div id="main-screen">
 
-    <!-- Load our script AFTER the HTML so the elements above already exist -->
-    <script src="popup.js"></script>
+      <!-- WELCOME SECTION -->
+      <div id="welcome-section">
+        <p id="platform-status">Checking platform...</p>
+        <h1>Let's build your perfect prompt.</h1>
+        <p class="welcome-subtext">Answer a few quick questions — we'll handle the rest.</p>
+        <button id="start-btn">Let's Go →</button>
+      </div>
+
+      <!-- INTENT SECTION -->
+      <div id="intent-section" style="display:none">
+        <button id="intent-back-btn" class="back-btn">← Back</button>
+        <h2>✨ What's on your mind today CHAMP?</h2>
+        <input
+          type="text"
+          id="intent-input"
+          placeholder="e.g. cyberpunk city at night, neon lights — or — a happy short-haired girl on a farm"
+        />
+        <button id="intent-continue-btn" disabled>Continue →</button>
+      </div>
+
+      <!-- QUESTION SECTION -->
+      <div id="question-section" style="display:none">
+        <button id="on-back-btn" class="back-btn">← Back</button>
+
+        <!-- Shown while AI generates questions -->
+        <div id="questions-loading" style="display:none">
+          <div class="spinner"></div>
+          <p>🤔 Thinking of the best questions for you...</p>
+        </div>
+
+        <p id="progress-text">Question 1 of 4</p>
+        <p id="question-text"></p>
+        <div id="options-container"></div>
+      </div>
+
+      <!-- ANYTHING ELSE SECTION -->
+      <div id="anything-else-section" style="display:none">
+        <button id="anything-else-back-btn" class="back-btn">← Back</button>
+        <h2>Anything else you want to add?</h2>
+        <p class="section-subtext">Optional — skip if you're good.</p>
+        <textarea
+          id="extra-input"
+          placeholder="e.g. make it look vintage, add fog, no people..."
+        ></textarea>
+        <button id="to-summary-btn">Look good →</button>
+      </div>
+
+      <!-- SUMMARY SECTION -->
+      <div id="summary-section" style="display:none">
+        <button id="summary-back-btn" class="back-btn">← Back</button>
+        <h2>Here's what you picked:</h2>
+        <div id="summary-content"></div>
+        <button id="generate-btn">✨ Generate My Prompt</button>
+
+        <!-- Shown after Gemini returns the finished prompt -->
+        <div id="result-section" style="display:none">
+          <h3>Your Midjourney Prompt:</h3>
+          <div id="generated-prompt"></div>
+          <button id="copy-btn">📋 Copy Prompt</button>
+          <small id="copy-confirmation" style="display:none">✅ Copied!</small>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Settings screen: hidden by default -->
+    <div id="settings-screen">
+      <button id="back-from-settings-btn">← Back</button>
+      <h2>API Key Settings</h2>
+      <input
+        type="password"
+        id="api-key-input"
+        placeholder="Paste your Gemini API key here"
+      />
+      <button id="save-key-btn">Save Key</button>
+      <p id="save-status"></p>
+    </div>
+
+    <!-- type="module" lets popup.js use ES module imports -->
+    <script type="module" src="popup.js"></script>
   </body>
 </html>
