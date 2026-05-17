@@ -210,6 +210,63 @@ body {
   color: #1a1a2e;
 }
 
+.option-else-btn {
+  width: 100%;
+  background: transparent;
+  border: 1.5px dashed #bbb;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-style: italic;
+  color: #999;
+  display: block;
+}
+
+.option-else-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.else-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.else-input {
+  flex: 1;
+  border-radius: 8px;
+  border: 1.5px solid #ccc;
+  padding: 10px 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.else-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.else-done-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.else-done-btn:hover {
+  background: #2563eb;
+}
+
 /* ── ANYTHING ELSE SECTION ── */
 #anything-else-section {
   text-align: left;

@@ -40,21 +40,57 @@ export function showQuestion(index, questions, intent) {
   const container = document.getElementById("options-container");
   container.innerHTML = "";
 
+  const advanceFromAnswer = (answer) => {
+    userAnswers[index] = answer;
+    if (index + 1 < activeQuestions.length) {
+      showQuestion(index + 1);
+    } else {
+      document.getElementById("question-section").style.display = "none";
+      document.getElementById("anything-else-section").style.display = "block";
+    }
+  };
+
   q.options.forEach((option) => {
     const btn = document.createElement("button");
     btn.className = "option-btn";
     btn.textContent = option;
-    btn.addEventListener("click", () => {
-      userAnswers[index] = option;
-      if (index + 1 < activeQuestions.length) {
-        showQuestion(index + 1);
-      } else {
-        document.getElementById("question-section").style.display = "none";
-        document.getElementById("anything-else-section").style.display = "block";
-      }
-    });
+    btn.addEventListener("click", () => advanceFromAnswer(option));
     container.appendChild(btn);
   });
+
+  const elseBtn = document.createElement("button");
+  elseBtn.className = "option-else-btn";
+  elseBtn.textContent = "Something else...";
+  elseBtn.addEventListener("click", () => {
+    elseBtn.remove();
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "else-input-wrapper";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "else-input";
+    input.placeholder = "Type your answer…";
+
+    const doneBtn = document.createElement("button");
+    doneBtn.className = "else-done-btn";
+    doneBtn.textContent = "Done";
+
+    const submit = () => {
+      const val = input.value.trim();
+      if (!val) return;
+      advanceFromAnswer(val);
+    };
+
+    doneBtn.addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(doneBtn);
+    container.appendChild(wrapper);
+    input.focus();
+  });
+  container.appendChild(elseBtn);
 }
 
 // Populates #summary-content using actual question text as labels.
