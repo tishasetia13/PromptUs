@@ -50,20 +50,19 @@ export function showQuestion(index, questions, intent) {
     }
   };
 
+  const savedAnswer = userAnswers[index];
+  const isCustomAnswer = savedAnswer && !q.options.includes(savedAnswer);
+
   q.options.forEach((option) => {
     const btn = document.createElement("button");
     btn.className = "option-btn";
     btn.textContent = option;
+    if (option === savedAnswer) btn.classList.add("selected");
     btn.addEventListener("click", () => advanceFromAnswer(option));
     container.appendChild(btn);
   });
 
-  const elseBtn = document.createElement("button");
-  elseBtn.className = "option-else-btn";
-  elseBtn.textContent = "Something else...";
-  elseBtn.addEventListener("click", () => {
-    elseBtn.remove();
-
+  const showInlineInput = (prefillValue) => {
     const wrapper = document.createElement("div");
     wrapper.className = "else-input-wrapper";
 
@@ -71,6 +70,7 @@ export function showQuestion(index, questions, intent) {
     input.type = "text";
     input.className = "else-input";
     input.placeholder = "Type your answer…";
+    if (prefillValue) input.value = prefillValue;
 
     const doneBtn = document.createElement("button");
     doneBtn.className = "else-done-btn";
@@ -89,8 +89,21 @@ export function showQuestion(index, questions, intent) {
     wrapper.appendChild(doneBtn);
     container.appendChild(wrapper);
     input.focus();
+  };
+
+  const elseBtn = document.createElement("button");
+  elseBtn.className = "option-else-btn";
+  elseBtn.textContent = "Something else...";
+  elseBtn.addEventListener("click", () => {
+    elseBtn.remove();
+    showInlineInput(null);
   });
   container.appendChild(elseBtn);
+
+  if (isCustomAnswer) {
+    elseBtn.remove();
+    showInlineInput(savedAnswer);
+  }
 }
 
 // Populates #summary-content using actual question text as labels.
@@ -99,6 +112,15 @@ export function showSummary() {
 
   const container = document.getElementById("summary-content");
   container.innerHTML = "";
+
+  if (userIntent) {
+    const row = document.createElement("div");
+    row.className = "summary-row";
+    row.innerHTML =
+      `<span class="summary-label">What I want to create</span>` +
+      `<span class="summary-answer">${userIntent}</span>`;
+    container.appendChild(row);
+  }
 
   activeQuestions.forEach((q, i) => {
     const answer = userAnswers[i] || "—";
