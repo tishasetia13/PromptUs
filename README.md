@@ -25,6 +25,19 @@ Added a content script (`content.js`) that runs on Midjourney.com and detects th
 | `popup.html` | Added `#platform-status` element that shows the detection result. |
 | `popup.css` | Styled `#platform-status` with a neutral default and green/red variants for detected/not-detected states. |
 
+### Phase 3 — Smarter Gemini prompts ✅
+Rewrote both the question-generation and final-prompt-generation Gemini prompts. Replaced loose instruction lists with explicit step-by-step workflows. Added a foundational → structural → refining tier model so questions and final prompts both flow from basics to refinements. Restructured category blocks to use the same tier model. Questions can now be variable in count (including zero), and options are optional with a mandatory "Something else" escape when present.
+
+### Phase 2.6 — Category-first UX refactor ✅
+Replaced platform detection with user-driven category selection. The popup now shows four buttons (Text, Image, Video, Webdev) instead of trying to detect which AI platform the user is on. This is more reliable, more intuitive, and works on any tab.
+
+**What changed:**
+- `popup.html` — Removed platform status badge, added four category buttons
+- `popup.css` — Added category button grid styles, removed platform badge styles
+- `popup.js` — Replaced platform detection logic with category button click handlers
+- `content.js` — Gutted (reserved for future use)
+- `manifest.json` — Removed content_scripts, simplified permissions
+
 ---
 
 ## What each file does

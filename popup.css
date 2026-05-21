@@ -31,46 +31,18 @@ body {
 
 /* ── WELCOME SECTION ── */
 #welcome-section {
-  text-align: center;
-  padding: 24px 0 8px;
-}
-
-/* Platform detection badge — lives inside welcome section */
-#platform-status {
-  display: inline-block;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  background-color: #e8eaf6;
-  color: #555;
-  margin-bottom: 16px;
-}
-
-#platform-status.detected {
-  background-color: #d4edda;
-  color: #1a5c2a;
-}
-
-#platform-status.not-detected {
-  background-color: #fde8e8;
-  color: #7a1c1c;
+  text-align: left;
+  padding: 8px 0 0;
 }
 
 #welcome-section h1 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
   color: #1a1a2e;
-  margin: 0 0 10px;
+  margin: 0 0 14px;
 }
 
-.welcome-subtext {
-  font-size: 13px;
-  color: #666;
-  margin: 0 0 20px;
-}
-
-/* ── Primary action buttons (start, to-summary, generate) ── */
-#start-btn,
+/* ── Primary action buttons (to-summary, generate) ── */
 #to-summary-btn {
   width: 100%;
   background: #3b82f6;
@@ -84,9 +56,51 @@ body {
   margin-top: 4px;
 }
 
-#start-btn:hover,
 #to-summary-btn:hover {
   background: #2563eb;
+}
+
+/* ── Category selection buttons ── */
+.category-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.category-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: white;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.category-btn:hover {
+  border-color: #3b82f6;
+  background: #f0f4ff;
+}
+
+.category-btn.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.category-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.category-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a2e;
 }
 
 #generate-btn {
@@ -122,26 +136,18 @@ body {
   color: #555;
 }
 
-/* ── INTENT SECTION ── */
-#intent-section {
-  text-align: left;
-}
-
-#intent-section h2 {
-  font-size: 17px;
-  font-weight: bold;
-  color: #1a1a2e;
-  margin: 0 0 16px;
-}
-
 #intent-input {
   width: 100%;
+  height: 100px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #ccc;
   padding: 12px 14px;
   font-size: 14px;
   box-sizing: border-box;
+  resize: none;
   margin-bottom: 12px;
+  font-family: sans-serif;
+  line-height: 1.5;
 }
 
 #intent-input:focus {
@@ -149,7 +155,7 @@ body {
   border-color: #3b82f6;
 }
 
-#intent-continue-btn {
+#start-btn {
   width: 100%;
   background: #3b82f6;
   color: white;
@@ -159,14 +165,13 @@ body {
   font-size: 15px;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 4px;
 }
 
-#intent-continue-btn:hover:not(:disabled) {
+#start-btn:hover:not(:disabled) {
   background: #2563eb;
 }
 
-#intent-continue-btn:disabled {
+#start-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }

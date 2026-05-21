@@ -11,7 +11,6 @@ console.log("Prompt Assistant popup loaded successfully!");
 
 // ── Element references ──────────────────────────────────────────────────────
 
-const statusEl            = document.getElementById("platform-status");
 const mainScreen          = document.getElementById("main-screen");
 const settingsScreen      = document.getElementById("settings-screen");
 const settingsBtn         = document.getElementById("settings-btn");
@@ -25,7 +24,6 @@ const generateBtn         = document.getElementById("generate-btn");
 
 const SECTIONS = [
   "welcome-section",
-  "intent-section",
   "question-section",
   "anything-else-section",
   "summary-section",
@@ -97,38 +95,45 @@ function hideQuestionsLoading() {
 // ── MCQ flow navigation ────────────────────────────────────────────────────
 
 let userIntent = "";
+let selectedCategory = { name: "AI text tools like ChatGPT, Claude, and Gemini", category: "text" };
 
-document.getElementById("start-btn").addEventListener("click", () => {
-  showSection("intent-section");
+// Category button toggle — no navigation, just updates selection
+document.querySelectorAll(".category-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".category-btn").forEach((b) => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    selectedCategory = {
+      name: btn.dataset.label,
+      category: btn.dataset.category,
+    };
+  });
 });
 
-document.getElementById("intent-back-btn").addEventListener("click", () => {
-  showSection("welcome-section");
-});
-
+// Enable/disable Continue button based on textarea input
 document.getElementById("intent-input").addEventListener("input", (e) => {
-  document.getElementById("intent-continue-btn").disabled =
+  document.getElementById("start-btn").disabled =
     e.target.value.replace(/\s/g, "").length < 3;
 });
 
-document.getElementById("intent-continue-btn").addEventListener("click", async () => {
+// Continue button — kicks off the question generation flow
+document.getElementById("start-btn").addEventListener("click", async () => {
   userIntent = document.getElementById("intent-input").value.trim();
   showSection("question-section");
   showQuestionsLoading();
 
   try {
-    const aiQuestions = await generateQuestions("Midjourney", userIntent);
+    const aiQuestions = await generateQuestions(selectedCategory.name, userIntent, selectedCategory.category);
     hideQuestionsLoading();
     showQuestion(0, aiQuestions, userIntent);
   } catch (err) {
     alert(`Could not generate questions: ${err.message}`);
-    showSection("intent-section");
+    showSection("welcome-section");
   }
 });
 
 document.getElementById("on-back-btn").addEventListener("click", () => {
   if (currentQuestionIndex === 0) {
-    showSection("intent-section");
+    showSection("welcome-section");
   } else {
     showQuestion(currentQuestionIndex - 1);
   }
@@ -160,7 +165,7 @@ generateBtn.addEventListener("click", async () => {
   const extraNotes = document.getElementById("extra-input").value.trim();
 
   try {
-    const promptText = await generatePrompt("Midjourney", formattedAnswers, extraNotes);
+    const promptText = await generatePrompt(selectedCategory.name, formattedAnswers, extraNotes, selectedCategory.category);
     generateBtn.classList.remove("loading");
     generateBtn.textContent = "✨ Generate My Prompt";
     document.getElementById("generated-prompt").textContent = promptText;
@@ -184,37 +189,3 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
   }, 2000);
 });
 
-// ── Phase 1: platform detection ────────────────────────────────────────────
-// Queries the active tab's content script and updates the welcome badge.
-
-chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-  const activeTab = tabs[0];
-
-  if (!activeTab) {
-    showNotDetected();
-    return;
-  }
-
-  chrome.tabs.sendMessage(
-    activeTab.id,
-    { action: "getPlatform" },
-    function (response) {
-      if (chrome.runtime.lastError) {
-        showNotDetected();
-        return;
-      }
-
-      if (response && response.platform === "midjourney") {
-        statusEl.textContent = "You're on Midjourney ✨";
-        statusEl.classList.add("detected");
-      } else {
-        showNotDetected();
-      }
-    }
-  );
-});
-
-function showNotDetected() {
-  statusEl.textContent = "❌ No supported AI platform detected on this tab";
-  statusEl.classList.add("not-detected");
-}

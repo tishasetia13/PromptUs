@@ -11,24 +11,34 @@
 
     <div id="main-screen">
 
-      <!-- WELCOME SECTION -->
+      <!-- WELCOME SECTION — category picker + intent input combined -->
       <div id="welcome-section">
-        <p id="platform-status">Checking platform...</p>
-        <h1>Let's build your perfect prompt.</h1>
-        <p class="welcome-subtext">Answer a few quick questions — we'll handle the rest.</p>
-        <button id="start-btn">Let's Go →</button>
-      </div>
+        <h1>Craft your perfect prompt.</h1>
 
-      <!-- INTENT SECTION -->
-      <div id="intent-section" style="display:none">
-        <button id="intent-back-btn" class="back-btn">← Back</button>
-        <h2>✨ What's on your mind today CHAMP?</h2>
-        <input
-          type="text"
+        <div class="category-buttons">
+          <button class="category-btn selected" data-category="text" data-label="AI text tools like ChatGPT, Claude, and Gemini">
+            <span class="category-icon">✍️</span>
+            <span class="category-name">Text</span>
+          </button>
+          <button class="category-btn" data-category="image" data-label="AI image generators like Midjourney, DALL·E, and Flux">
+            <span class="category-icon">🖼️</span>
+            <span class="category-name">Image</span>
+          </button>
+          <button class="category-btn" data-category="video" data-label="AI video generators like Sora, Kling, and Seedance">
+            <span class="category-icon">🎬</span>
+            <span class="category-name">Video</span>
+          </button>
+          <button class="category-btn" data-category="webdev" data-label="AI app builders like Lovable, Bolt, and v0">
+            <span class="category-icon">🌐</span>
+            <span class="category-name">Webdev</span>
+          </button>
+        </div>
+
+        <textarea
           id="intent-input"
-          placeholder="e.g. cyberpunk city at night, neon lights — or — a happy short-haired girl on a farm"
-        />
-        <button id="intent-continue-btn" disabled>Continue →</button>
+          placeholder="Dump everything here — a rough idea, a vibe, a brain dump... we'll shape it together."
+        ></textarea>
+        <button id="start-btn" disabled>Continue →</button>
       </div>
 
       <!-- QUESTION SECTION -->
@@ -55,7 +65,7 @@
           id="extra-input"
           placeholder="e.g. make it look vintage, add fog, no people..."
         ></textarea>
-        <button id="to-summary-btn">Look good →</button>
+        <button id="to-summary-btn">Looks good? →</button>
       </div>
 
       <!-- SUMMARY SECTION -->
@@ -67,7 +77,7 @@
 
         <!-- Shown after Gemini returns the finished prompt -->
         <div id="result-section" style="display:none">
-          <h3>Your Midjourney Prompt:</h3>
+          <h3>Your Prompt:</h3>
           <div id="generated-prompt"></div>
           <button id="copy-btn">📋 Copy Prompt</button>
           <small id="copy-confirmation" style="display:none">✅ Copied!</small>
