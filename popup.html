@@ -11,34 +11,16 @@
 
     <div id="main-screen">
 
-      <!-- WELCOME SECTION — category picker + intent input combined -->
-      <div id="welcome-section">
+      <!-- INTENT FALLBACK — shown when popup is opened without a pre-filled intent -->
+      <div id="intent-fallback-section">
         <h1>Craft your perfect prompt.</h1>
-
-        <div class="category-buttons">
-          <button class="category-btn selected" data-category="text" data-label="AI text tools like ChatGPT, Claude, and Gemini">
-            <span class="category-icon">✍️</span>
-            <span class="category-name">Text</span>
-          </button>
-          <button class="category-btn" data-category="image" data-label="AI image generators like Midjourney, DALL·E, and Flux">
-            <span class="category-icon">🖼️</span>
-            <span class="category-name">Image</span>
-          </button>
-          <button class="category-btn" data-category="video" data-label="AI video generators like Sora, Kling, and Seedance">
-            <span class="category-icon">🎬</span>
-            <span class="category-name">Video</span>
-          </button>
-          <button class="category-btn" data-category="webdev" data-label="AI app builders like Lovable, Bolt, and v0">
-            <span class="category-icon">🌐</span>
-            <span class="category-name">Webdev</span>
-          </button>
-        </div>
-
-        <textarea
-          id="intent-input"
-          placeholder="Dump everything here — a rough idea, a vibe, a brain dump... we'll shape it together."
-        ></textarea>
-        <button id="start-btn" disabled>Continue →</button>
+        <input
+          type="text"
+          id="fallback-intent-input"
+          placeholder="What do you want to do?"
+          autocomplete="off"
+        />
+        <button id="fallback-start-btn" disabled>Continue →</button>
       </div>
 
       <!-- QUESTION SECTION -->

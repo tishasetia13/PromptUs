@@ -23,7 +23,7 @@ const generateBtn         = document.getElementById("generate-btn");
 // ── Section switcher (within main-screen) ──────────────────────────────────
 
 const SECTIONS = [
-  "welcome-section",
+  "intent-fallback-section",
   "question-section",
   "anything-else-section",
   "summary-section",
@@ -50,9 +50,40 @@ function showMainScreen() {
 }
 
 // ── On load: send first-time users to settings if no API key is saved ──────
+// Also checks for an intent pre-filled by the floating button and auto-starts
+// the question flow if one is found, skipping the welcome screen.
 
-getApiKey().then((key) => {
-  if (!key) showSettingsScreen();
+getApiKey().then(async (key) => {
+  if (!key) {
+    showSettingsScreen();
+    return;
+  }
+
+  const stored = await chrome.storage.local.get(["__pa_intent__", "__pa_category__"]);
+  const prefill = (stored.__pa_intent__ || "").trim();
+
+  // No prefill — show the fallback input screen (it's the default visible section)
+  if (!prefill) return;
+
+  await chrome.storage.local.remove(["__pa_intent__", "__pa_category__"]);
+
+  // Apply the category chosen on the floating pill
+  if (stored.__pa_category__) {
+    const CAT_MAP = {
+      text:   { name: "AI text tools like ChatGPT, Claude, and Gemini",        category: "text"   },
+      image:  { name: "AI image generators like Midjourney, DALL·E, and Flux", category: "image"  },
+      video:  { name: "AI video generators like Sora, Kling, and Seedance",    category: "video"  },
+      webdev: { name: "AI app builders like Lovable, Bolt, and v0",            category: "webdev" },
+    };
+    const cat = CAT_MAP[stored.__pa_category__];
+    if (cat) selectedCategory = cat;
+  }
+
+  // Pre-fill the fallback input so Back from question 0 shows the intent
+  document.getElementById("fallback-intent-input").value = prefill;
+  document.getElementById("fallback-start-btn").disabled = false;
+
+  await startQuestionsFlow(prefill);
 });
 
 // ── Settings overlay events ────────────────────────────────────────────────
@@ -97,27 +128,9 @@ function hideQuestionsLoading() {
 let userIntent = "";
 let selectedCategory = { name: "AI text tools like ChatGPT, Claude, and Gemini", category: "text" };
 
-// Category button toggle — no navigation, just updates selection
-document.querySelectorAll(".category-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".category-btn").forEach((b) => b.classList.remove("selected"));
-    btn.classList.add("selected");
-    selectedCategory = {
-      name: btn.dataset.label,
-      category: btn.dataset.category,
-    };
-  });
-});
-
-// Enable/disable Continue button based on textarea input
-document.getElementById("intent-input").addEventListener("input", (e) => {
-  document.getElementById("start-btn").disabled =
-    e.target.value.replace(/\s/g, "").length < 3;
-});
-
-// Continue button — kicks off the question generation flow
-document.getElementById("start-btn").addEventListener("click", async () => {
-  userIntent = document.getElementById("intent-input").value.trim();
+// Shared helper — kicks off question generation with a given intent string
+async function startQuestionsFlow(intent) {
+  userIntent = intent;
   showSection("question-section");
   showQuestionsLoading();
 
@@ -127,13 +140,24 @@ document.getElementById("start-btn").addEventListener("click", async () => {
     showQuestion(0, aiQuestions, userIntent);
   } catch (err) {
     alert(`Could not generate questions: ${err.message}`);
-    showSection("welcome-section");
+    showSection("intent-fallback-section");
   }
+}
+
+// Enable/disable Continue based on fallback input
+document.getElementById("fallback-intent-input").addEventListener("input", (e) => {
+  document.getElementById("fallback-start-btn").disabled =
+    e.target.value.replace(/\s/g, "").length < 3;
+});
+
+// Continue from fallback screen
+document.getElementById("fallback-start-btn").addEventListener("click", () => {
+  startQuestionsFlow(document.getElementById("fallback-intent-input").value.trim());
 });
 
 document.getElementById("on-back-btn").addEventListener("click", () => {
   if (currentQuestionIndex === 0) {
-    showSection("welcome-section");
+    showSection("intent-fallback-section");
   } else {
     showQuestion(currentQuestionIndex - 1);
   }
@@ -170,6 +194,7 @@ generateBtn.addEventListener("click", async () => {
     generateBtn.textContent = "✨ Generate My Prompt";
     document.getElementById("generated-prompt").textContent = promptText;
     document.getElementById("result-section").style.display = "block";
+    chrome.storage.local.set({ __pa_prompt__: promptText });
   } catch (err) {
     generateBtn.classList.remove("loading");
     generateBtn.textContent = "✨ Generate My Prompt";
