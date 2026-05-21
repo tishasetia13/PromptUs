@@ -142,9 +142,8 @@ export async function generateQuestions(platformName, userIntent, category) {
     `       - YES, give options when the dimension has a few obvious, distinct directions the user might not have considered (mood, style, lighting type, layout direction).\n` +
     `       - NO, leave options empty when the question is open-ended or personal (names, specific copy, exact numbers, "tell me more about X").\n\n` +
     `   (d) If giving options:\n` +
-    `       - Provide 2 to 3 concrete, visual, meaningfully different options.\n` +
-    `       - Add "Something else" as the FINAL option. Always last. Always.\n` +
-    `       - Total options array length: 3–4 (2–3 real options + "Something else").\n` +
+    `       - Provide 2 to 4 concrete, visual, meaningfully different options.\n` +
+    `       - Do NOT add a "Something else" / "Other" / "None of the above" option. The UI already provides a free-text input below the options for users who want to type their own answer — adding it as an option would be redundant.\n` +
     `       - Options must be phrased in plain language a non-expert would understand.\n\n` +
     `   (e) If NOT giving options: use "options": [] (empty array). Do NOT add "Something else" — the user is already free to type anything.\n\n` +
     `═══════════════════════════════════════════════════════════════\n` +
@@ -154,7 +153,7 @@ export async function generateQuestions(platformName, userIntent, category) {
     `Each object has this exact shape:\n` +
     `{\n` +
     `  "question": "Your specific, plain-language question?",\n` +
-    `  "options": ["Option A", "Option B", "Something else"]\n` +
+    `  "options": ["Option A", "Option B", "Option C"]\n` +
     `}\n\n` +
     `Do not output anything except the JSON array.`;
 
@@ -172,7 +171,7 @@ export async function generateQuestions(platformName, userIntent, category) {
   }
 }
 
-export async function generatePrompt(platformName, answers, extraNotes, category) {
+export async function generatePrompt(platformName, userIntent, answers, extraNotes, category) {
   const apiKey = await getApiKey();
   if (!apiKey)
     throw new Error(
@@ -188,8 +187,9 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## INPUTS\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
-      `USER'S ANSWERS:\n${answers}\n\n` +
-      `EXTRA NOTES: ${extraNotes || "None"}\n\n` +
+      `ORIGINAL BRIEF FROM USER:\n"${userIntent}"\n\n` +
+      `USER'S ANSWERS TO FOLLOW-UP QUESTIONS:\n${answers}\n\n` +
+      `EXTRA NOTES FROM USER: ${extraNotes || "None"}\n\n` +
       `═══════════════════════════════════════════════════════════════\n` +
       `## WHAT A GREAT IMAGE PROMPT CONTAINS\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
@@ -200,6 +200,8 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## YOUR INTERNAL WORKFLOW — FOLLOW THESE STEPS IN ORDER\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
+      `### STEP 0 — ANCHOR ON THE BRIEF\n` +
+      `The ORIGINAL BRIEF FROM USER is the primary source of truth. Every fact, constraint, audience detail, product detail, length requirement, and stylistic preference stated there MUST be preserved in the final prompt. The follow-up answers and extra notes ADD to the brief — they do not replace it. If the brief mentions a specific audience, product name, length cap, social proof, or CTA, those facts MUST appear in your final prompt verbatim or near-verbatim.\n\n` +
       `### STEP 1 — ANCHOR THE SUBJECT\n` +
       `Start with the subject. Make it as specific and physical as possible. "A cosy bookstore café with floor-to-ceiling oak shelves, leather armchairs, and a marble counter" is strong. Pull every specific detail the user gave you into the subject description.\n\n` +
       `### STEP 2 — LAYER THE SCENE\n` +
@@ -225,8 +227,9 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## INPUTS\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
-      `USER'S ANSWERS:\n${answers}\n\n` +
-      `EXTRA NOTES: ${extraNotes || "None"}\n\n` +
+      `ORIGINAL BRIEF FROM USER:\n"${userIntent}"\n\n` +
+      `USER'S ANSWERS TO FOLLOW-UP QUESTIONS:\n${answers}\n\n` +
+      `EXTRA NOTES FROM USER: ${extraNotes || "None"}\n\n` +
       `═══════════════════════════════════════════════════════════════\n` +
       `## WHAT A GREAT VIDEO PROMPT CONTAINS\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
@@ -237,6 +240,8 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## YOUR INTERNAL WORKFLOW — FOLLOW THESE STEPS IN ORDER\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
+      `### STEP 0 — ANCHOR ON THE BRIEF\n` +
+      `The ORIGINAL BRIEF FROM USER is the primary source of truth. Every fact, constraint, audience detail, product detail, length requirement, and stylistic preference stated there MUST be preserved in the final prompt. The follow-up answers and extra notes ADD to the brief — they do not replace it. If the brief mentions a specific audience, product name, length cap, social proof, or CTA, those facts MUST appear in your final prompt verbatim or near-verbatim.\n\n` +
       `### STEP 1 — ANCHOR THE ACTION\n` +
       `Start with subject and action — be precise about movement. Not "a man walking" but "a man in a long coat striding through an empty subway station, glancing over his shoulder".\n\n` +
       `### STEP 2 — PLACE THE CAMERA\n` +
@@ -265,8 +270,9 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## INPUTS\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
-      `USER'S ANSWERS:\n${answers}\n\n` +
-      `EXTRA NOTES: ${extraNotes || "None"}\n\n` +
+      `ORIGINAL BRIEF FROM USER:\n"${userIntent}"\n\n` +
+      `USER'S ANSWERS TO FOLLOW-UP QUESTIONS:\n${answers}\n\n` +
+      `EXTRA NOTES FROM USER: ${extraNotes || "None"}\n\n` +
       `═══════════════════════════════════════════════════════════════\n` +
       `## WHAT A GREAT APP-BUILDER PROMPT CONTAINS\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
@@ -277,6 +283,8 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## YOUR INTERNAL WORKFLOW — FOLLOW THESE STEPS IN ORDER\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
+      `### STEP 0 — ANCHOR ON THE BRIEF\n` +
+      `The ORIGINAL BRIEF FROM USER is the primary source of truth. Every fact, constraint, audience detail, product detail, length requirement, and stylistic preference stated there MUST be preserved in the final prompt. The follow-up answers and extra notes ADD to the brief — they do not replace it. If the brief mentions a specific audience, product name, length cap, social proof, or CTA, those facts MUST appear in your final prompt verbatim or near-verbatim.\n\n` +
       `### STEP 1 — IDENTIFY THE CORE PURPOSE\n` +
       `Read what the user is building. If it's vague, infer the closest concrete thing.\n\n` +
       `### STEP 2 — INVENTORY THE SCOPE\n` +
@@ -308,6 +316,7 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## INPUTS YOU HAVE\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
+      `ORIGINAL BRIEF FROM USER:\n"${userIntent}"\n\n` +
       `THE USER'S ANSWERS TO FOLLOW-UP QUESTIONS:\n${answers}\n\n` +
       `EXTRA NOTES FROM THE USER: ${extraNotes || "None"}\n\n` +
       `═══════════════════════════════════════════════════════════════\n` +
@@ -328,6 +337,8 @@ export async function generatePrompt(platformName, answers, extraNotes, category
       `═══════════════════════════════════════════════════════════════\n` +
       `## YOUR INTERNAL WORKFLOW — FOLLOW THESE STEPS IN ORDER\n` +
       `═══════════════════════════════════════════════════════════════\n\n` +
+      `### STEP 0 — ANCHOR ON THE BRIEF\n` +
+      `The ORIGINAL BRIEF FROM USER is the primary source of truth. Every fact, constraint, audience detail, product detail, length requirement, and stylistic preference stated there MUST be preserved in the final prompt. The follow-up answers and extra notes ADD to the brief — they do not replace it. If the brief mentions a specific audience, product name, length cap, social proof, or CTA, those facts MUST appear in your final prompt verbatim or near-verbatim.\n\n` +
       `### STEP 1 — IDENTIFY THE TASK\n` +
       `Read the brief, the answers, the extra notes. In your head, state in one sentence: "The user wants the AI to ___." This is the Task. Everything else exists to serve it.\n\n` +
       `### STEP 2 — GATHER WHAT YOU KNOW\n` +

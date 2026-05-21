@@ -25,6 +25,12 @@ Added a content script (`content.js`) that runs on Midjourney.com and detects th
 | `popup.html` | Added `#platform-status` element that shows the detection result. |
 | `popup.css` | Styled `#platform-status` with a neutral default and green/red variants for detected/not-detected states. |
 
+### Phase 3.2 — Pass original intent to prompt generation ✅
+Fixed a data-loss bug where the user's original brief was never sent to Gemini during prompt generation. `generatePrompt` now receives `userIntent` as a parameter, includes it as `ORIGINAL BRIEF FROM USER` in the INPUTS block (before the Q&A answers), and a new STEP 0 instructs Gemini to treat it as the primary source of truth.
+
+### Phase 3.1 — Question rendering polish ✅
+Removed redundant "Something else" option from Gemini's question output (the free-text box already serves that purpose). Made the free-text input placeholder context-aware: "Or type your own answer..." when options exist, "Type your answer..." when they don't.
+
 ### Phase 3 — Smarter Gemini prompts ✅
 Rewrote both the question-generation and final-prompt-generation Gemini prompts. Replaced loose instruction lists with explicit step-by-step workflows. Added a foundational → structural → refining tier model so questions and final prompts both flow from basics to refinements. Restructured category blocks to use the same tier model. Questions can now be variable in count (including zero), and options are optional with a mandatory "Something else" escape when present.
 

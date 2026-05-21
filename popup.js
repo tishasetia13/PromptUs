@@ -165,7 +165,7 @@ generateBtn.addEventListener("click", async () => {
   const extraNotes = document.getElementById("extra-input").value.trim();
 
   try {
-    const promptText = await generatePrompt(selectedCategory.name, formattedAnswers, extraNotes, selectedCategory.category);
+    const promptText = await generatePrompt(selectedCategory.name, userIntent, formattedAnswers, extraNotes, selectedCategory.category);
     generateBtn.classList.remove("loading");
     generateBtn.textContent = "✨ Generate My Prompt";
     document.getElementById("generated-prompt").textContent = promptText;

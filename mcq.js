@@ -69,7 +69,8 @@ export function showQuestion(index, questions, intent) {
     const input = document.createElement("input");
     input.type = "text";
     input.className = "else-input";
-    input.placeholder = "Type your answer…";
+    const hasOptions = q.options && q.options.length > 0;
+    input.placeholder = hasOptions ? "Or type your own answer..." : "Type your answer...";
     if (prefillValue) input.value = prefillValue;
 
     const doneBtn = document.createElement("button");
