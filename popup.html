@@ -20,7 +20,36 @@
       </button>
     </div>
 
-    <div id="main-screen">
+    <!-- ── AUTH SECTION ──────────────────────────────────────────────────────
+         Shown on first open (or if not signed in). Hidden once user signs in.
+    ──────────────────────────────────────────────────────────────────────── -->
+    <div id="auth-section" style="display: none">
+      <div class="screen-header">
+        <div class="logo">
+          <span class="logo-mark">
+            <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+              <rect x="2.5" y="2.5" width="27" height="27" rx="6" stroke="#4A9EE8" stroke-width="1.5"/>
+              <path d="M10 13 L16 9 L22 13" stroke="#5BA8EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 18 L16 14 L22 18" stroke="#7A7F90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 23 L16 19 L22 23" stroke="#4A4F63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="logo-text">Prompt<span class="logo-accent">Us</span></span>
+        </div>
+      </div>
+      <div class="screen-body">
+        <h1 class="screen-title">Sign in to get started</h1>
+        <p class="screen-subtitle">Your prompts, saved and synced across devices.</p>
+        <button id="signin-btn" class="btn-primary" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span>Sign in with Google</span>
+        </button>
+        <p id="auth-error" style="display:none; color:#e05c5c; font-size:0.8rem; margin-top:12px;"></p>
+      </div>
+    </div>
+
+    <!-- ── MAIN APP (all existing screens) ──────────────────────────────── -->
+    <div id="main-screen" style="display: none">
 
       <!-- INTENT FALLBACK -->
       <div id="intent-fallback-section">
@@ -116,7 +145,7 @@
             <p class="loading-title">Working on it...</p>
           </div>
 
-          <!-- Question content (mirrors loading; hidden when loading shows) -->
+          <!-- Question content -->
           <div class="step-progress" data-step="1" id="question-step-progress">
             <span class="step-num">1</span>
             <span class="step-divider">/</span>
@@ -197,6 +226,12 @@
               <small id="copy-confirmation" style="display: none">Copied</small>
             </div>
           </div>
+
+          <!-- Paywall (revealed by popup.js when free limit is hit) -->
+          <div id="paywall-section" style="display: none">
+            <p id="paywall-message">You've used your 10 free prompts. Upgrade to Pro for unlimited access.</p>
+            <button id="upgrade-btn" class="btn-primary" type="button">Upgrade</button>
+          </div>
         </div>
         <div class="screen-footer-actions">
           <button id="generate-btn" class="btn-primary" type="button">Generate my prompt</button>
@@ -204,8 +239,9 @@
       </div>
 
     </div>
+    <!-- end #main-screen -->
 
-    <!-- Footer (decorative shortcuts + version) -->
+    <!-- Footer -->
     <div class="popup-footer">
       <span class="footer-shortcuts"><span class="kbd">&#x21B5;</span> continue &nbsp;·&nbsp; <span class="kbd">esc</span> close</span>
       <span class="footer-version">v0.4.2</span>
