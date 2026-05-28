@@ -18,12 +18,6 @@
           <path d="M12 7v5l3 2"/>
         </svg>
       </button>
-      <button id="settings-btn" class="icon-btn" type="button" aria-label="Settings">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-      </button>
     </div>
 
     <div id="main-screen">
@@ -215,22 +209,6 @@
     <div class="popup-footer">
       <span class="footer-shortcuts"><span class="kbd">&#x21B5;</span> continue &nbsp;·&nbsp; <span class="kbd">esc</span> close</span>
       <span class="footer-version">v0.4.2</span>
-    </div>
-
-    <!-- Settings screen overlay -->
-    <div id="settings-screen">
-      <button id="back-from-settings-btn" type="button">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        <span>Back</span>
-      </button>
-      <h2>API Key Settings</h2>
-      <input
-        type="password"
-        id="api-key-input"
-        placeholder="Paste your Gemini API key here"
-      />
-      <button id="save-key-btn" type="button">Save Key</button>
-      <p id="save-status"></p>
     </div>
 
     <script type="module" src="popup.js"></script>

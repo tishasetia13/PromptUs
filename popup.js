@@ -1,9 +1,7 @@
 // popup.js
 // Runs every time the popup is opened. Coordinates all screens and wires
-// up navigation between welcome → questions → anything-else → summary,
-// plus the settings overlay and Gemini API calls.
+// up navigation between welcome → questions → anything-else → summary.
 
-import { getApiKey, saveApiKey } from "./settings.js";
 import { showQuestion, showSummary, currentQuestionIndex, userAnswers, activeQuestions } from "./mcq.js";
 import { generateQuestions, generatePrompt } from "./gemini.js";
 
@@ -11,14 +9,7 @@ console.log("Prompt Assistant popup loaded successfully!");
 
 // ── Element references ──────────────────────────────────────────────────────
 
-const mainScreen          = document.getElementById("main-screen");
-const settingsScreen      = document.getElementById("settings-screen");
-const settingsBtn         = document.getElementById("settings-btn");
-const backFromSettingsBtn = document.getElementById("back-from-settings-btn");
-const apiKeyInput         = document.getElementById("api-key-input");
-const saveKeyBtn          = document.getElementById("save-key-btn");
-const saveStatus          = document.getElementById("save-status");
-const generateBtn         = document.getElementById("generate-btn");
+const generateBtn = document.getElementById("generate-btn");
 
 // ── Section switcher (within main-screen) ──────────────────────────────────
 
@@ -36,30 +27,9 @@ function showSection(id) {
   });
 }
 
-// ── Settings overlay helpers ───────────────────────────────────────────────
+// ── On load: pre-fill intent from active tab if available ─────────────────
 
-function showSettingsScreen() {
-  mainScreen.style.display = "none";
-  settingsBtn.style.display = "none";
-  settingsScreen.style.display = "block";
-}
-
-function showMainScreen() {
-  settingsScreen.style.display = "none";
-  mainScreen.style.display = "block";
-  settingsBtn.style.display = "";
-}
-
-// ── On load: send first-time users to settings if no API key is saved ──────
-// Then ask the active tab's content script for any text already in the input
-// field and auto-start the question flow if something is found.
-
-getApiKey().then(async (key) => {
-  if (!key) {
-    showSettingsScreen();
-    return;
-  }
-
+(async () => {
   let prefill = "";
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -67,40 +37,13 @@ getApiKey().then(async (key) => {
       const response = await chrome.tabs.sendMessage(tab.id, { action: "getIntent" });
       prefill = (response?.intent || "").trim();
     }
-  } catch (_) {
-    // Content script not injected on this page — fall through to manual entry
-  }
-
+  } catch (_) {}
   if (!prefill) return;
-
-  // Pre-fill the fallback input so Back from category screen shows the intent
   document.getElementById("fallback-intent-input").value = prefill;
   document.getElementById("fallback-start-btn").disabled = false;
-
   userIntent = prefill;
   showSection("category-section");
-});
-
-// ── Settings overlay events ────────────────────────────────────────────────
-
-settingsBtn.addEventListener("click", async () => {
-  const key = await getApiKey();
-  apiKeyInput.value = key ? "••••••••" : "";
-  saveStatus.textContent = "";
-  showSettingsScreen();
-});
-
-saveKeyBtn.addEventListener("click", async () => {
-  const val = apiKeyInput.value;
-  if (val && val !== "••••••••") {
-    await saveApiKey(val);
-    saveStatus.textContent = "✅ Key saved!";
-  }
-});
-
-backFromSettingsBtn.addEventListener("click", () => {
-  showMainScreen();
-});
+})();
 
 // ── Question-section loading helpers ──────────────────────────────────────
 
