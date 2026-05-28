@@ -1,9 +1,11 @@
 // popup.js
 // Runs every time the popup is opened. Coordinates all screens and wires
-// up navigation between welcome → questions → anything-else → summary.
+// up navigation between auth → welcome → questions → anything-else → summary.
 
 import { showQuestion, showSummary, currentQuestionIndex, userAnswers, activeQuestions } from "./mcq.js";
 import { generateQuestions, generatePrompt } from "./gemini.js";
+import { signInWithGoogle, getCurrentUser } from "./auth.js";
+import { syncUser, incrementUsage } from "./db.js";
 
 console.log("Prompt Assistant popup loaded successfully!");
 
@@ -27,9 +29,69 @@ function showSection(id) {
   });
 }
 
-// ── On load: pre-fill intent from active tab if available ─────────────────
+// ── Auth gate: runs immediately on every popup open ────────────────────────
+// Shows the sign-in screen if there's no saved user, otherwise proceeds
+// straight to the normal intent flow.
+
+let currentUser = null; // holds the signed-in user for the whole session
 
 (async () => {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    // No user — show the auth screen, keep main-screen hidden
+    document.getElementById("auth-section").style.display = "block";
+    document.getElementById("main-screen").style.display  = "none";
+    return;
+  }
+
+  // User is already signed in — proceed with the normal startup flow
+  currentUser = user;
+  document.getElementById("auth-section").style.display = "none";
+  document.getElementById("main-screen").style.display  = "block";
+  await runStartupPrefill();
+})();
+
+// ── Sign-in button ─────────────────────────────────────────────────────────
+
+document.getElementById("signin-btn").addEventListener("click", async () => {
+  const btn       = document.getElementById("signin-btn");
+  const errorEl   = document.getElementById("auth-error");
+
+  btn.disabled    = true;
+  btn.textContent = "Signing in...";
+  errorEl.style.display = "none";
+
+  try {
+    // 1. Get Google token + profile via Chrome identity API
+    const googleUser = await signInWithGoogle();
+
+    // 2. Sync with Supabase — creates row if new, fetches it if returning
+    const dbUser = await syncUser(googleUser.google_id, googleUser.email, googleUser.name);
+
+    // 3. Merge DB data (usage_count, is_pro) into the saved user object
+    const fullUser = { ...googleUser, ...dbUser };
+    await chrome.storage.local.set({ promptus_user: fullUser });
+    currentUser = fullUser;
+
+    // 4. Show the main app
+    document.getElementById("auth-section").style.display = "none";
+    document.getElementById("main-screen").style.display  = "block";
+    await runStartupPrefill();
+
+  } catch (err) {
+    errorEl.textContent   = `Sign-in failed: ${err.message}`;
+    errorEl.style.display = "block";
+    btn.disabled          = false;
+    btn.textContent       = "Sign in with Google";
+  }
+});
+
+// ── Startup: pre-fill intent from active tab if available ─────────────────
+// Extracted into a function so both the "already signed in" and
+// "just signed in" paths can call it.
+
+async function runStartupPrefill() {
   let prefill = "";
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -38,27 +100,32 @@ function showSection(id) {
       prefill = (response?.intent || "").trim();
     }
   } catch (_) {}
-  if (!prefill) return;
+
+  if (!prefill) {
+    showSection("intent-fallback-section");
+    return;
+  }
+
   document.getElementById("fallback-intent-input").value = prefill;
   document.getElementById("fallback-start-btn").disabled = false;
   userIntent = prefill;
   showSection("category-section");
-})();
+}
 
 // ── Question-section loading helpers ──────────────────────────────────────
 
 function showQuestionsLoading() {
-  document.getElementById("questions-loading").style.display = "flex";
-  document.getElementById("progress-text").style.display = "none";
-  document.getElementById("question-text").style.display = "none";
-  document.getElementById("options-container").style.display = "none";
+  document.getElementById("questions-loading").style.display  = "flex";
+  document.getElementById("progress-text").style.display      = "none";
+  document.getElementById("question-text").style.display      = "none";
+  document.getElementById("options-container").style.display  = "none";
 }
 
 function hideQuestionsLoading() {
-  document.getElementById("questions-loading").style.display = "none";
-  document.getElementById("progress-text").style.display = "block";
-  document.getElementById("question-text").style.display = "block";
-  document.getElementById("options-container").style.display = "block";
+  document.getElementById("questions-loading").style.display  = "none";
+  document.getElementById("progress-text").style.display      = "block";
+  document.getElementById("question-text").style.display      = "block";
+  document.getElementById("options-container").style.display  = "block";
 }
 
 // ── MCQ flow navigation ────────────────────────────────────────────────────
@@ -66,9 +133,6 @@ function hideQuestionsLoading() {
 let userIntent = "";
 let selectedCategory = { name: "AI text tools like ChatGPT, Claude, and Gemini", category: "text" };
 
-// SVG icons (inline) — replaced the original emoji icons to match the new monochrome design.
-// The cat-icon span and overall HTML structure are unchanged; we just inject SVG markup
-// instead of an emoji glyph.
 const ICON_TEXT   = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="17" x2="11" y2="17"/></svg>`;
 const ICON_IMAGE  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.6"/><path d="M3 17l5-5 4 4 3-3 6 6"/></svg>`;
 const ICON_VIDEO  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>`;
@@ -81,7 +145,6 @@ const CATEGORIES = [
   { key: 'webdev', icon: ICON_WEBDEV, label: 'Webdev', desc: 'Apps, sites, components',            name: 'AI app builders like Lovable, Bolt, and v0' },
 ];
 
-// Render category cards once on load
 const categoryOptions = document.getElementById("category-options");
 CATEGORIES.forEach((cat) => {
   const card = document.createElement("button");
@@ -99,7 +162,6 @@ CATEGORIES.forEach((cat) => {
   categoryOptions.appendChild(card);
 });
 
-// Shared helper — kicks off question generation with a given intent string
 async function startQuestionsFlow(intent) {
   userIntent = intent;
   showSection("question-section");
@@ -116,6 +178,7 @@ async function startQuestionsFlow(intent) {
 }
 
 // ── Typewriter placeholder for intent textarea ────────────────────────────
+
 const INTENT_PLACEHOLDERS = [
   "e.g. roast my LinkedIn bio and rewrite it",
   "e.g. a wolf in a neon-lit Tokyo alley, cinematic shot",
@@ -159,13 +222,11 @@ const INTENT_PLACEHOLDERS = [
   typePhrase();
 })();
 
-// Enable/disable Continue based on fallback input
 document.getElementById("fallback-intent-input").addEventListener("input", (e) => {
   document.getElementById("fallback-start-btn").disabled =
     e.target.value.replace(/\s/g, "").length < 3;
 });
 
-// Continue from fallback screen → category selection
 document.getElementById("fallback-start-btn").addEventListener("click", () => {
   userIntent = document.getElementById("fallback-intent-input").value.trim();
   showSection("category-section");
@@ -185,7 +246,7 @@ document.getElementById("on-back-btn").addEventListener("click", () => {
 
 document.getElementById("anything-else-back-btn").addEventListener("click", () => {
   showSection("question-section");
-  showQuestion(currentQuestionIndex); // re-render the last question
+  showQuestion(currentQuestionIndex);
 });
 
 document.getElementById("to-summary-btn").addEventListener("click", () => {
@@ -197,9 +258,30 @@ document.getElementById("summary-back-btn").addEventListener("click", () => {
   showSection("anything-else-section");
 });
 
-// ── Generate button: call Gemini and display the result ───────────────────
+// ── Generate button: enforce free tier, then call Gemini ─────────────────
 
 generateBtn.addEventListener("click", async () => {
+
+  // ── Step 5: Check usage limit before doing anything ──────────────────
+  try {
+    const newCount = await incrementUsage(currentUser.google_id);
+
+    // Re-fetch is_pro in case it changed since sign-in
+    const { promptus_user } = await chrome.storage.local.get("promptus_user");
+    const isPro = promptus_user?.is_pro || false;
+
+    if (newCount > 10 && !isPro) {
+      // Over the limit — show paywall, hide generate button
+      document.getElementById("paywall-section").style.display = "block";
+      document.getElementById("generate-btn").style.display    = "none";
+      return; // stop here — do NOT call Gemini
+    }
+  } catch (err) {
+    // If usage tracking fails, fail open (don't block the user)
+    console.warn("Usage tracking error:", err.message);
+  }
+
+  // ── Normal generation flow (unchanged from original) ─────────────────
   generateBtn.classList.add("loading");
   generateBtn.textContent = "Generating...";
 
@@ -212,7 +294,7 @@ generateBtn.addEventListener("click", async () => {
     const promptText = await generatePrompt(selectedCategory.name, userIntent, formattedAnswers, extraNotes, selectedCategory.category);
     generateBtn.classList.remove("loading");
     generateBtn.textContent = "Prompt Generated";
-    generateBtn.disabled = true;
+    generateBtn.disabled    = true;
     document.getElementById("generated-prompt").textContent = promptText;
     document.getElementById("result-section").style.display = "block";
     chrome.storage.local.set({ __pa_prompt__: promptText });
@@ -230,14 +312,10 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
   await navigator.clipboard.writeText(text);
   const confirmation = document.getElementById("copy-confirmation");
   confirmation.style.display = "inline";
-  setTimeout(() => {
-    confirmation.style.display = "none";
-  }, 2000);
+  setTimeout(() => { confirmation.style.display = "none"; }, 2000);
 });
 
-// ── Quick-start chips (intent screen) ─────────────────────────────────────
-// UI-only helper: clicking a chip fills the intent textarea and enables the
-// Continue button. Mirrors the existing 'input' handler's enable logic.
+// ── Quick-start chips ─────────────────────────────────────────────────────
 
 document.querySelectorAll(".chip").forEach((chip) => {
   chip.addEventListener("click", () => {
@@ -248,10 +326,7 @@ document.querySelectorAll(".chip").forEach((chip) => {
   });
 });
 
-// ── Step-progress mirror (question screen) ────────────────────────────────
-// Watches #progress-text (which mcq.js rewrites as "Question N of M") and
-// reflects the position into the visual progress bar. Purely UI display —
-// the underlying question flow is untouched.
+// ── Step-progress mirror ──────────────────────────────────────────────────
 
 const stepProgressEl = document.getElementById("question-step-progress");
 if (stepProgressEl) {
@@ -260,7 +335,7 @@ if (stepProgressEl) {
   const stepFillEl  = stepProgressEl.querySelector(".step-bar-fill");
 
   const sync = () => {
-    const text = document.getElementById("progress-text").textContent || "";
+    const text  = document.getElementById("progress-text").textContent || "";
     const match = text.match(/Question\s+(\d+)\s+of\s+(\d+)/i);
     if (!match) return;
     const current = parseInt(match[1], 10);
@@ -277,14 +352,13 @@ if (stepProgressEl) {
   sync();
 }
 
-// ── Question screen: auto-show input for no-options questions + auto-grow ──
+// ── Question screen: auto-show input + auto-grow textarea ─────────────────
+
 new MutationObserver((mutations) => {
   for (const mutation of mutations) {
     for (const node of mutation.addedNodes) {
       if (node.nodeType !== 1) continue;
 
-      // For questions with no MCQ options, skip the "Something else..." button
-      // and show the input directly.
       if (node.classList.contains('option-else-btn')) {
         const hasOptions = document.getElementById('options-container')
           .querySelectorAll('.option-btn').length > 0;
@@ -292,7 +366,6 @@ new MutationObserver((mutations) => {
         continue;
       }
 
-      // Find a newly added .else-input <input> and replace it with a growing textarea.
       const raw = node.classList.contains('else-input') ? node
         : node.querySelector?.('.else-input');
       if (!raw || raw.tagName !== 'INPUT') continue;
@@ -301,21 +374,20 @@ new MutationObserver((mutations) => {
         .querySelectorAll('.option-btn').length > 0;
 
       const ta = document.createElement('textarea');
-      ta.className = raw.className;
-      ta.placeholder = hasOptions ? raw.placeholder : 'Type your answer here...';
-      ta.value = raw.value;
-      ta.rows = 1;
-      ta.style.resize = 'none';
+      ta.className    = raw.className;
+      ta.placeholder  = hasOptions ? raw.placeholder : 'Type your answer here...';
+      ta.value        = raw.value;
+      ta.rows         = 1;
+      ta.style.resize   = 'none';
       ta.style.overflow = 'hidden';
 
       const grow = () => {
         ta.style.height = 'auto';
         ta.style.height = ta.scrollHeight + 'px';
-        raw.value = ta.value; // keep hidden input synced for mcq.js submit closure
+        raw.value = ta.value;
       };
       ta.addEventListener('input', grow);
 
-      // Enter (without Shift) submits; Shift+Enter inserts a newline
       ta.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
@@ -324,7 +396,6 @@ new MutationObserver((mutations) => {
         }
       });
 
-      // Keep the original <input> in the DOM (hidden) so mcq.js submit closure reads it
       raw.style.display = 'none';
       raw.after(ta);
       ta.focus();
@@ -332,4 +403,3 @@ new MutationObserver((mutations) => {
     }
   }
 }).observe(document.getElementById('options-container'), { childList: true, subtree: true });
-
