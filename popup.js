@@ -24,6 +24,7 @@ const generateBtn         = document.getElementById("generate-btn");
 
 const SECTIONS = [
   "intent-fallback-section",
+  "category-section",
   "question-section",
   "anything-else-section",
   "summary-section",
@@ -50,8 +51,8 @@ function showMainScreen() {
 }
 
 // ── On load: send first-time users to settings if no API key is saved ──────
-// Also checks for an intent pre-filled by the floating button and auto-starts
-// the question flow if one is found, skipping the welcome screen.
+// Then ask the active tab's content script for any text already in the input
+// field and auto-start the question flow if something is found.
 
 getApiKey().then(async (key) => {
   if (!key) {
@@ -59,31 +60,25 @@ getApiKey().then(async (key) => {
     return;
   }
 
-  const stored = await chrome.storage.local.get(["__pa_intent__", "__pa_category__"]);
-  const prefill = (stored.__pa_intent__ || "").trim();
-
-  // No prefill — show the fallback input screen (it's the default visible section)
-  if (!prefill) return;
-
-  await chrome.storage.local.remove(["__pa_intent__", "__pa_category__"]);
-
-  // Apply the category chosen on the floating pill
-  if (stored.__pa_category__) {
-    const CAT_MAP = {
-      text:   { name: "AI text tools like ChatGPT, Claude, and Gemini",        category: "text"   },
-      image:  { name: "AI image generators like Midjourney, DALL·E, and Flux", category: "image"  },
-      video:  { name: "AI video generators like Sora, Kling, and Seedance",    category: "video"  },
-      webdev: { name: "AI app builders like Lovable, Bolt, and v0",            category: "webdev" },
-    };
-    const cat = CAT_MAP[stored.__pa_category__];
-    if (cat) selectedCategory = cat;
+  let prefill = "";
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      const response = await chrome.tabs.sendMessage(tab.id, { action: "getIntent" });
+      prefill = (response?.intent || "").trim();
+    }
+  } catch (_) {
+    // Content script not injected on this page — fall through to manual entry
   }
 
-  // Pre-fill the fallback input so Back from question 0 shows the intent
+  if (!prefill) return;
+
+  // Pre-fill the fallback input so Back from category screen shows the intent
   document.getElementById("fallback-intent-input").value = prefill;
   document.getElementById("fallback-start-btn").disabled = false;
 
-  await startQuestionsFlow(prefill);
+  userIntent = prefill;
+  showSection("category-section");
 });
 
 // ── Settings overlay events ────────────────────────────────────────────────
@@ -128,6 +123,39 @@ function hideQuestionsLoading() {
 let userIntent = "";
 let selectedCategory = { name: "AI text tools like ChatGPT, Claude, and Gemini", category: "text" };
 
+// SVG icons (inline) — replaced the original emoji icons to match the new monochrome design.
+// The cat-icon span and overall HTML structure are unchanged; we just inject SVG markup
+// instead of an emoji glyph.
+const ICON_TEXT   = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="17" x2="11" y2="17"/></svg>`;
+const ICON_IMAGE  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.6"/><path d="M3 17l5-5 4 4 3-3 6 6"/></svg>`;
+const ICON_VIDEO  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>`;
+const ICON_WEBDEV = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 8 3 12 8 16"/><polyline points="16 8 21 12 16 16"/><line x1="14" y1="5" x2="10" y2="19"/></svg>`;
+
+const CATEGORIES = [
+  { key: 'text',   icon: ICON_TEXT,   label: 'Text',   desc: 'Long-form, chat, code, analysis', name: 'AI text tools like ChatGPT, Claude, and Gemini' },
+  { key: 'image',  icon: ICON_IMAGE,  label: 'Image',  desc: 'Stills, illustrations, photography', name: 'AI image generators like Midjourney, DALL·E, and Flux' },
+  { key: 'video',  icon: ICON_VIDEO,  label: 'Video',  desc: 'Motion, cinematics, b-roll',         name: 'AI video generators like Sora, Kling, and Seedance' },
+  { key: 'webdev', icon: ICON_WEBDEV, label: 'Webdev', desc: 'Apps, sites, components',            name: 'AI app builders like Lovable, Bolt, and v0' },
+];
+
+// Render category cards once on load
+const categoryOptions = document.getElementById("category-options");
+CATEGORIES.forEach((cat) => {
+  const card = document.createElement("button");
+  card.className = "category-card";
+  card.innerHTML = `
+    <span class="cat-icon">${cat.icon}</span>
+    <span class="cat-info">
+      <span class="cat-label">${cat.label}</span>
+    </span>
+  `;
+  card.addEventListener("click", () => {
+    selectedCategory = { name: cat.name, category: cat.key };
+    startQuestionsFlow(userIntent);
+  });
+  categoryOptions.appendChild(card);
+});
+
 // Shared helper — kicks off question generation with a given intent string
 async function startQuestionsFlow(intent) {
   userIntent = intent;
@@ -144,20 +172,69 @@ async function startQuestionsFlow(intent) {
   }
 }
 
+// ── Typewriter placeholder for intent textarea ────────────────────────────
+const INTENT_PLACEHOLDERS = [
+  "e.g. roast my LinkedIn bio and rewrite it",
+  "e.g. a wolf in a neon-lit Tokyo alley, cinematic shot",
+  "e.g. drone shot flying over misty mountains at sunrise",
+  "e.g. a SaaS landing page with waitlist signup, dark mode",
+];
+(function typewriterPlaceholder() {
+  const el = document.getElementById("fallback-intent-input");
+  let stopped = false;
+  let phraseIndex = 0;
+
+  el.addEventListener("input", () => {
+    stopped = true;
+    el.placeholder = "";
+  }, { once: true });
+
+  function typePhrase() {
+    if (stopped) return;
+    const phrase = INTENT_PLACEHOLDERS[phraseIndex];
+    let charIndex = 0;
+
+    function typeChar() {
+      if (stopped) return;
+      charIndex++;
+      el.placeholder = phrase.slice(0, charIndex);
+      if (charIndex < phrase.length) {
+        setTimeout(typeChar, 45);
+      } else {
+        setTimeout(() => {
+          if (stopped) return;
+          el.placeholder = "";
+          phraseIndex = (phraseIndex + 1) % INTENT_PLACEHOLDERS.length;
+          setTimeout(typePhrase, 80);
+        }, 2000);
+      }
+    }
+
+    typeChar();
+  }
+
+  typePhrase();
+})();
+
 // Enable/disable Continue based on fallback input
 document.getElementById("fallback-intent-input").addEventListener("input", (e) => {
   document.getElementById("fallback-start-btn").disabled =
     e.target.value.replace(/\s/g, "").length < 3;
 });
 
-// Continue from fallback screen
+// Continue from fallback screen → category selection
 document.getElementById("fallback-start-btn").addEventListener("click", () => {
-  startQuestionsFlow(document.getElementById("fallback-intent-input").value.trim());
+  userIntent = document.getElementById("fallback-intent-input").value.trim();
+  showSection("category-section");
+});
+
+document.getElementById("category-back-btn").addEventListener("click", () => {
+  showSection("intent-fallback-section");
 });
 
 document.getElementById("on-back-btn").addEventListener("click", () => {
   if (currentQuestionIndex === 0) {
-    showSection("intent-fallback-section");
+    showSection("category-section");
   } else {
     showQuestion(currentQuestionIndex - 1);
   }
@@ -181,7 +258,7 @@ document.getElementById("summary-back-btn").addEventListener("click", () => {
 
 generateBtn.addEventListener("click", async () => {
   generateBtn.classList.add("loading");
-  generateBtn.textContent = "✨ Generating...";
+  generateBtn.textContent = "Generating...";
 
   const formattedAnswers = activeQuestions
     .map((q, i) => `${q.question}: ${userAnswers[i] || "—"}`)
@@ -191,13 +268,14 @@ generateBtn.addEventListener("click", async () => {
   try {
     const promptText = await generatePrompt(selectedCategory.name, userIntent, formattedAnswers, extraNotes, selectedCategory.category);
     generateBtn.classList.remove("loading");
-    generateBtn.textContent = "✨ Generate My Prompt";
+    generateBtn.textContent = "Prompt Generated";
+    generateBtn.disabled = true;
     document.getElementById("generated-prompt").textContent = promptText;
     document.getElementById("result-section").style.display = "block";
     chrome.storage.local.set({ __pa_prompt__: promptText });
   } catch (err) {
     generateBtn.classList.remove("loading");
-    generateBtn.textContent = "✨ Generate My Prompt";
+    generateBtn.textContent = "Generate my prompt";
     alert(`Could not generate prompt: ${err.message}`);
   }
 });
@@ -213,4 +291,102 @@ document.getElementById("copy-btn").addEventListener("click", async () => {
     confirmation.style.display = "none";
   }, 2000);
 });
+
+// ── Quick-start chips (intent screen) ─────────────────────────────────────
+// UI-only helper: clicking a chip fills the intent textarea and enables the
+// Continue button. Mirrors the existing 'input' handler's enable logic.
+
+document.querySelectorAll(".chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    const input = document.getElementById("fallback-intent-input");
+    input.value = chip.dataset.chip || chip.textContent;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.focus();
+  });
+});
+
+// ── Step-progress mirror (question screen) ────────────────────────────────
+// Watches #progress-text (which mcq.js rewrites as "Question N of M") and
+// reflects the position into the visual progress bar. Purely UI display —
+// the underlying question flow is untouched.
+
+const stepProgressEl = document.getElementById("question-step-progress");
+if (stepProgressEl) {
+  const stepNumEl   = stepProgressEl.querySelector(".step-num");
+  const stepTotalEl = stepProgressEl.querySelector(".step-total");
+  const stepFillEl  = stepProgressEl.querySelector(".step-bar-fill");
+
+  const sync = () => {
+    const text = document.getElementById("progress-text").textContent || "";
+    const match = text.match(/Question\s+(\d+)\s+of\s+(\d+)/i);
+    if (!match) return;
+    const current = parseInt(match[1], 10);
+    const total   = parseInt(match[2], 10);
+    stepNumEl.textContent   = String(current);
+    stepTotalEl.textContent = String(total);
+    stepFillEl.style.width  = `${Math.round((current / total) * 100)}%`;
+  };
+
+  new MutationObserver(sync).observe(
+    document.getElementById("progress-text"),
+    { childList: true, characterData: true, subtree: true }
+  );
+  sync();
+}
+
+// ── Question screen: auto-show input for no-options questions + auto-grow ──
+new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (node.nodeType !== 1) continue;
+
+      // For questions with no MCQ options, skip the "Something else..." button
+      // and show the input directly.
+      if (node.classList.contains('option-else-btn')) {
+        const hasOptions = document.getElementById('options-container')
+          .querySelectorAll('.option-btn').length > 0;
+        if (!hasOptions) node.click();
+        continue;
+      }
+
+      // Find a newly added .else-input <input> and replace it with a growing textarea.
+      const raw = node.classList.contains('else-input') ? node
+        : node.querySelector?.('.else-input');
+      if (!raw || raw.tagName !== 'INPUT') continue;
+
+      const hasOptions = document.getElementById('options-container')
+        .querySelectorAll('.option-btn').length > 0;
+
+      const ta = document.createElement('textarea');
+      ta.className = raw.className;
+      ta.placeholder = hasOptions ? raw.placeholder : 'Type your answer here...';
+      ta.value = raw.value;
+      ta.rows = 1;
+      ta.style.resize = 'none';
+      ta.style.overflow = 'hidden';
+
+      const grow = () => {
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+        raw.value = ta.value; // keep hidden input synced for mcq.js submit closure
+      };
+      ta.addEventListener('input', grow);
+
+      // Enter (without Shift) submits; Shift+Enter inserts a newline
+      ta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          raw.value = ta.value;
+          raw.closest('.else-input-wrapper')?.querySelector('.else-done-btn')?.click();
+        }
+      });
+
+      // Keep the original <input> in the DOM (hidden) so mcq.js submit closure reads it
+      raw.style.display = 'none';
+      raw.after(ta);
+      ta.focus();
+      grow();
+    }
+  }
+}).observe(document.getElementById('options-container'), { childList: true, subtree: true });
 

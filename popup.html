@@ -2,86 +2,237 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Prompt Assistant</title>
+    <title>PromptUs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <!-- Gear icon — always in top-right of popup, hidden when on settings screen -->
-    <button id="settings-btn">⚙️</button>
+
+    <!-- Global header utility icons (top-right, always visible) -->
+    <div class="popup-header-actions">
+      <button id="history-btn" class="icon-btn" type="button" aria-label="History">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 7v5l3 2"/>
+        </svg>
+      </button>
+      <button id="settings-btn" class="icon-btn" type="button" aria-label="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
 
     <div id="main-screen">
 
-      <!-- INTENT FALLBACK — shown when popup is opened without a pre-filled intent -->
+      <!-- INTENT FALLBACK -->
       <div id="intent-fallback-section">
-        <h1>Craft your perfect prompt.</h1>
-        <input
-          type="text"
-          id="fallback-intent-input"
-          placeholder="What do you want to do?"
-          autocomplete="off"
-        />
-        <button id="fallback-start-btn" disabled>Continue →</button>
-      </div>
-
-      <!-- QUESTION SECTION -->
-      <div id="question-section" style="display:none">
-        <button id="on-back-btn" class="back-btn">← Back</button>
-
-        <!-- Shown while AI generates questions -->
-        <div id="questions-loading" style="display:none">
-          <div class="spinner"></div>
-          <p>🤔 Thinking of the best questions for you...</p>
+        <div class="screen-header">
+          <div class="logo">
+            <span class="logo-mark">
+              <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+                <rect x="2.5" y="2.5" width="27" height="27" rx="6" stroke="#4A9EE8" stroke-width="1.5"/>
+                <path d="M10 13 L16 9 L22 13" stroke="#5BA8EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 18 L16 14 L22 18" stroke="#7A7F90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 23 L16 19 L22 23" stroke="#4A4F63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="logo-text">Prompt<span class="logo-accent">Us</span></span>
+          </div>
         </div>
+        <div class="screen-body">
+          <h1 class="screen-title">What's on your mind?</h1>
+          <p class="screen-subtitle">Describe your goal here. Brain dump, one-liner, or half-baked idea — we'll turn it into a killer prompt.</p>
 
-        <p id="progress-text">Question 1 of 4</p>
-        <p id="question-text"></p>
-        <div id="options-container"></div>
+          <textarea
+            id="fallback-intent-input"
+            placeholder="e.g. plan an 8-day trip to Vietnam for my friends"
+            autocomplete="off"
+            rows="3"
+          ></textarea>
+        </div>
+        <div class="screen-footer-actions">
+          <button id="fallback-start-btn" class="btn-primary" disabled>
+            <span>Continue</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
       </div>
 
-      <!-- ANYTHING ELSE SECTION -->
-      <div id="anything-else-section" style="display:none">
-        <button id="anything-else-back-btn" class="back-btn">← Back</button>
-        <h2>Anything else you want to add?</h2>
-        <p class="section-subtext">Optional — skip if you're good.</p>
-        <textarea
-          id="extra-input"
-          placeholder="e.g. make it look vintage, add fog, no people..."
-        ></textarea>
-        <button id="to-summary-btn">Looks good? →</button>
+      <!-- CATEGORY -->
+      <div id="category-section" style="display: none">
+        <div class="screen-header">
+          <button id="category-back-btn" class="back-btn icon-btn" type="button" aria-label="Back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="logo">
+            <span class="logo-mark">
+              <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+                <rect x="2.5" y="2.5" width="27" height="27" rx="6" stroke="#4A9EE8" stroke-width="1.5"/>
+                <path d="M10 13 L16 9 L22 13" stroke="#5BA8EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 18 L16 14 L22 18" stroke="#7A7F90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 23 L16 19 L22 23" stroke="#4A4F63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="logo-text">Prompt<span class="logo-accent">Us</span></span>
+          </div>
+        </div>
+        <div class="screen-body">
+          <h1 class="screen-title">Pick your canvas!</h1>
+          <p class="screen-subtitle">Tell us what you're prompting for.</p>
+          <div id="category-options"></div>
+        </div>
       </div>
 
-      <!-- SUMMARY SECTION -->
-      <div id="summary-section" style="display:none">
-        <button id="summary-back-btn" class="back-btn">← Back</button>
-        <h2>Here's what you picked:</h2>
-        <div id="summary-content"></div>
-        <button id="generate-btn">✨ Generate My Prompt</button>
+      <!-- QUESTION -->
+      <div id="question-section" style="display: none">
+        <div class="screen-header">
+          <button id="on-back-btn" class="back-btn icon-btn" type="button" aria-label="Back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="logo">
+            <span class="logo-mark">
+              <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+                <rect x="2.5" y="2.5" width="27" height="27" rx="6" stroke="#4A9EE8" stroke-width="1.5"/>
+                <path d="M10 13 L16 9 L22 13" stroke="#5BA8EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 18 L16 14 L22 18" stroke="#7A7F90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 23 L16 19 L22 23" stroke="#4A4F63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="logo-text">Prompt<span class="logo-accent">Us</span></span>
+          </div>
+        </div>
+        <div class="screen-body">
 
-        <!-- Shown after Gemini returns the finished prompt -->
-        <div id="result-section" style="display:none">
-          <h3>Your Prompt:</h3>
-          <div id="generated-prompt"></div>
-          <button id="copy-btn">📋 Copy Prompt</button>
-          <small id="copy-confirmation" style="display:none">✅ Copied!</small>
+          <!-- Loading state (toggled by popup.js) -->
+          <div id="questions-loading" style="display: none">
+            <div class="loading-ring">
+              <div class="loading-ring__icon">
+                <svg viewBox="0 0 32 32" width="36" height="36" fill="none">
+                  <rect x="2.5" y="2.5" width="27" height="27" rx="6" stroke="#4A9EE8" stroke-width="1.5"/>
+                  <path d="M10 13 L16 9 L22 13" stroke="#5BA8EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 18 L16 14 L22 18" stroke="#7A7F90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 23 L16 19 L22 23" stroke="#4A4F63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <p class="loading-title">Working on it...</p>
+          </div>
+
+          <!-- Question content (mirrors loading; hidden when loading shows) -->
+          <div class="step-progress" data-step="1" id="question-step-progress">
+            <span class="step-num">1</span>
+            <span class="step-divider">/</span>
+            <span class="step-total">5</span>
+            <div class="step-bar"><div class="step-bar-fill" style="width:20%"></div></div>
+          </div>
+          <div id="progress-text" class="eyebrow">Question 1 of 4</div>
+          <h1 id="question-text" class="screen-title"></h1>
+          <div id="options-container"></div>
+        </div>
+      </div>
+
+      <!-- ANYTHING ELSE -->
+      <div id="anything-else-section" style="display: none">
+        <div class="screen-header">
+          <button id="anything-else-back-btn" class="back-btn icon-btn" type="button" aria-label="Back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="logo">
+            <span class="logo-mark">
+              <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+                <rect x="2.5" y="2.5" width="27" height="27" rx="6" stroke="#4A9EE8" stroke-width="1.5"/>
+                <path d="M10 13 L16 9 L22 13" stroke="#5BA8EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 18 L16 14 L22 18" stroke="#7A7F90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 23 L16 19 L22 23" stroke="#4A4F63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="logo-text">Prompt<span class="logo-accent">Us</span></span>
+          </div>
+        </div>
+        <div class="screen-body">
+          <h1 class="screen-title">Any extra details that you wanna include in the prompt?</h1>
+          <textarea
+            id="extra-input"
+            placeholder="anything specific you want included or avoided..."
+            rows="4"
+          ></textarea>
+        </div>
+        <div class="screen-footer-actions">
+          <button id="to-summary-btn" class="btn-primary" type="button">
+            <span>Continue</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div id="summary-section" style="display: none">
+        <div class="screen-header">
+          <button id="summary-back-btn" class="back-btn icon-btn" type="button" aria-label="Back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="logo">
+            <span class="logo-mark">
+              <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+                <rect x="2.5" y="2.5" width="27" height="27" rx="6" stroke="#4A9EE8" stroke-width="1.5"/>
+                <path d="M10 13 L16 9 L22 13" stroke="#5BA8EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 18 L16 14 L22 18" stroke="#7A7F90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 23 L16 19 L22 23" stroke="#4A4F63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="logo-text">Prompt<span class="logo-accent">Us</span></span>
+          </div>
+        </div>
+        <div class="screen-body">
+          <h1 class="screen-title">Review your answers</h1>
+          <div id="summary-content"></div>
+
+          <!-- Result (revealed by popup.js after Generate) -->
+          <div id="result-section" style="display: none">
+            <div class="eyebrow eyebrow--spaced">YOUR PROMPT</div>
+            <div id="generated-prompt"></div>
+            <div class="result-actions">
+              <button id="copy-btn" class="btn-secondary" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+              <small id="copy-confirmation" style="display: none">Copied</small>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer-actions">
+          <button id="generate-btn" class="btn-primary" type="button">Generate my prompt</button>
         </div>
       </div>
 
     </div>
 
-    <!-- Settings screen: hidden by default -->
+    <!-- Footer (decorative shortcuts + version) -->
+    <div class="popup-footer">
+      <span class="footer-shortcuts"><span class="kbd">&#x21B5;</span> continue &nbsp;·&nbsp; <span class="kbd">esc</span> close</span>
+      <span class="footer-version">v0.4.2</span>
+    </div>
+
+    <!-- Settings screen overlay -->
     <div id="settings-screen">
-      <button id="back-from-settings-btn">← Back</button>
+      <button id="back-from-settings-btn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>Back</span>
+      </button>
       <h2>API Key Settings</h2>
       <input
         type="password"
         id="api-key-input"
         placeholder="Paste your Gemini API key here"
       />
-      <button id="save-key-btn">Save Key</button>
+      <button id="save-key-btn" type="button">Save Key</button>
       <p id="save-status"></p>
     </div>
 
-    <!-- type="module" lets popup.js use ES module imports -->
     <script type="module" src="popup.js"></script>
   </body>
 </html>

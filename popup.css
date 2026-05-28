@@ -1,453 +1,870 @@
-/* ── Base ── */
-body {
-  width: 380px;
-  min-height: 280px;
-  padding: 20px;
-  font-family: sans-serif;
-  text-align: left;
-  background-color: #f0f4ff;
-  margin: 0;
-  position: relative;
+/* ── Design tokens ──────────────────────────────────────────────────────── */
+:root {
+  --bg:        #2D2F3E;
+  --surface:   #363A4A;
+  --surface-2: #2A2C39;
+  --border:    #4A4F63;
+  --accent:    #4A9EE8;
+  --accent-2:  #6BB1ED;
+  --text:      #F5F6F8;
+  --text-dim:  #8B909A;
+  --text-mute: #5A5F73;
+  --on-accent: #15192A;
+  --radius:    8px;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────── */
+* {
   box-sizing: border-box;
 }
 
-/* ── Gear button ── */
-#settings-btn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: #aaa;
-  padding: 4px;
-  line-height: 1;
-}
-
-#settings-btn:hover {
-  color: #666;
-}
-
-/* ── INTENT FALLBACK SECTION ── */
-#intent-fallback-section {
-  text-align: left;
-  padding: 8px 0 0;
-}
-
-#intent-fallback-section h1 {
-  font-size: 20px;
-  font-weight: bold;
-  color: #1a1a2e;
-  margin: 0 0 16px;
-}
-
-/* ── Primary action buttons (to-summary, generate) ── */
-#to-summary-btn {
-  width: 100%;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 14px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 4px;
-}
-
-#to-summary-btn:hover {
-  background: #2563eb;
-}
-
-#generate-btn {
-  width: 100%;
-  background: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 14px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 16px;
-}
-
-#generate-btn:hover {
-  background: #15803d;
-}
-
-/* ── Back buttons (shared class) ── */
-.back-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #999;
-  font-size: 12px;
+html, body {
+  margin: 0;
   padding: 0;
-  margin-bottom: 12px;
-  display: block;
+  background: var(--bg);
 }
 
-.back-btn:hover {
-  color: #555;
+body {
+  width: 380px;
+  min-height: 420px;
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+input, textarea {
+  font-family: inherit;
+  color: var(--text);
+}
+
+/* ── Top-right utility icons (global) ──────────────────────────────────── */
+.popup-header-actions {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+}
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-dim);
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.icon-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Main screen layout ────────────────────────────────────────────────── */
+#main-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The visible section should flex-fill so the Continue button anchors to the
+   bottom of the popup. popup.js sets `style.display = "block"` inline on the
+   shown section, so override with !important via an attribute selector that
+   excludes the hidden (display:none) siblings. */
+#main-screen > div:not([style*="display:none"]):not([style*="display: none"]) {
+  display: flex !important;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* ── Per-section screen header (logo + optional back) ─────────────────── */
+.screen-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 20px 14px;
+}
+
+.back-btn {
+  margin-right: 2px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.logo-accent {
+  color: var(--accent);
+}
+
+/* ── Screen body + footer-actions ─────────────────────────────────────── */
+.screen-body {
+  padding: 6px 20px 20px;
+  flex: 1;
+}
+
+.screen-footer-actions {
+  padding: 8px 20px 20px;
+}
+
+/* ── Typography helpers ────────────────────────────────────────────────── */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+  font-family: 'Space Mono', ui-monospace, monospace;
+}
+
+.eyebrow--spaced {
+  margin-top: 20px;
+}
+
+.screen-title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.screen-subtitle {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  margin: 0 0 18px;
+}
+
+/* ── Step progress bar ─────────────────────────────────────────────────── */
+.step-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 16px;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 13px;
+}
+
+.step-num {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.step-divider {
+  color: var(--text-mute);
+}
+
+.step-total {
+  color: var(--text-dim);
+}
+
+.step-bar {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-left: 4px;
+}
+
+.step-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+/* "Question N of M" label — hidden; JS still reads it to drive the progress bar */
+#progress-text {
+  display: none !important;
+}
+
+/* Hide question-screen step bar while loading is visible. Sibling selector:
+   #questions-loading sits before the step bar in DOM order. */
+#questions-loading[style*="flex"] ~ #question-step-progress,
+#questions-loading[style*="flex"] ~ #question-text,
+#questions-loading[style*="flex"] ~ #options-container {
+  display: none !important;
+}
+
+/* ── INTENT screen ─────────────────────────────────────────────────────── */
+
+/* Larger logo across all main screens */
+#intent-fallback-section .logo-mark,
+#intent-fallback-section .logo-mark svg,
+#category-section .logo-mark,
+#category-section .logo-mark svg,
+#question-section .logo-mark,
+#question-section .logo-mark svg,
+#anything-else-section .logo-mark,
+#anything-else-section .logo-mark svg,
+#summary-section .logo-mark,
+#summary-section .logo-mark svg {
+  width: 38px;
+  height: 38px;
+}
+
+#intent-fallback-section .logo-text,
+#category-section .logo-text,
+#question-section .logo-text,
+#anything-else-section .logo-text,
+#summary-section .logo-text {
+  font-size: 22px;
+}
+
+/* Summary screen: scrollable body so the Generate button stays pinned */
+#summary-section .screen-body {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Bigger Generate button (matches intent/anything-else screens) */
+#summary-section .btn-primary {
+  font-size: 16px;
+  padding: 16px;
+}
+
+/* Bigger Continue button on the anything-else screen (matches intent screen) */
+#anything-else-section .btn-primary {
+  font-size: 16px;
+  padding: 16px;
+}
+
+#anything-else-section .btn-primary svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Bigger Continue button on the intent screen */
+#intent-fallback-section .btn-primary {
+  font-size: 16px;
+  padding: 16px;
+}
+
+#intent-fallback-section .btn-primary svg {
+  width: 18px;
+  height: 18px;
 }
 
 #fallback-intent-input {
   width: 100%;
-  border-radius: 8px;
-  border: 1.5px solid #ccc;
-  padding: 11px 14px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
   font-size: 14px;
-  box-sizing: border-box;
-  margin-bottom: 12px;
-  font-family: sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s ease;
+  margin-bottom: 4px;
+  min-height: 88px;
+  font-family: inherit;
+}
+
+#fallback-intent-input::placeholder {
+  color: var(--text-mute);
 }
 
 #fallback-intent-input:focus {
-  outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
 }
 
-#fallback-start-btn {
+/* Quick-start chips */
+.quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text);
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.chip:hover {
+  background: #3F4456;
+  border-color: #5A5F73;
+}
+
+/* ── Primary / secondary buttons ──────────────────────────────────────── */
+.btn-primary {
   width: 100%;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 14px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  letter-spacing: -0.005em;
+  transition: background 0.12s ease, opacity 0.12s ease;
 }
 
-#fallback-start-btn:hover:not(:disabled) {
-  background: #2563eb;
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-2);
 }
 
-#fallback-start-btn:disabled {
+.btn-primary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* ── QUESTION SECTION ── */
-#question-section {
-  text-align: left;
+.btn-primary.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
-#progress-text {
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 12px;
   font-size: 12px;
-  color: #aaa;
-  margin: 0 0 8px;
+  font-weight: 500;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
-#question-text {
-  font-size: 18px;
-  font-weight: bold;
-  color: #1a1a2e;
-  margin: 0 0 16px;
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--text-dim);
 }
 
-/* Option cards injected by mcq.js */
+/* ── CATEGORY cards (rendered by popup.js, classes preserved) ─────────── */
+#category-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  color: var(--text);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.category-card:hover {
+  border-color: var(--accent);
+  background: #3A3F52;
+}
+
+.category-card .cat-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}
+
+.category-card .cat-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.category-card .cat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.category-card .cat-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.category-card .cat-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Radio indicator on right side of category card */
+.category-card::after {
+  content: '';
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  box-sizing: border-box;
+  transition: border-color 0.12s ease;
+}
+
+.category-card:hover::after {
+  border-color: var(--accent);
+}
+
+/* ── QUESTION option cards (rendered by mcq.js, classes preserved) ────── */
+/* popup.js toggles #options-container's inline display (block) for the
+   loading state, so rely on sibling margin rather than flex gap for spacing. */
+#options-container > * + * {
+  margin-top: 8px;
+}
+
 .option-btn {
   width: 100%;
-  background: white;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
   text-align: left;
-  margin-bottom: 8px;
-  cursor: pointer;
+  color: var(--text);
   font-size: 14px;
-  color: #333;
-  display: block;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  font-family: inherit;
 }
 
 .option-btn:hover {
-  border-color: #3b82f6;
-  background: #f0f4ff;
-  color: #1a1a2e;
+  border-color: var(--accent);
+  background: #3A3F52;
+}
+
+.option-btn::after {
+  content: '';
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  box-sizing: border-box;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.option-btn:hover::after {
+  border-color: var(--accent);
 }
 
 .option-btn.selected {
-  border-color: #3b82f6;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-weight: 600;
+  border-color: var(--accent);
+  background: #2F3447;
 }
 
+.option-btn.selected::after {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px #2F3447;
+}
+
+/* "Something else..." dashed-bordered button */
 .option-else-btn {
   width: 100%;
   background: transparent;
-  border: 1.5px dashed #bbb;
-  border-radius: 8px;
-  padding: 12px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
   text-align: left;
-  margin-bottom: 8px;
-  cursor: pointer;
+  color: var(--text-dim);
   font-size: 14px;
-  font-style: italic;
-  color: #999;
-  display: block;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.option-else-btn::before {
+  content: '+';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-dim);
+  line-height: 1;
 }
 
 .option-else-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--accent);
+  color: var(--text);
 }
 
+.option-else-btn:hover::before {
+  color: var(--accent);
+}
+
+/* Inline "type your own" input that replaces the else-btn */
 .else-input-wrapper {
   display: flex;
   gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: stretch;
+  width: 100%;
 }
 
 .else-input {
   flex: 1;
-  border-radius: 8px;
-  border: 1.5px solid #ccc;
-  padding: 10px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
   font-size: 14px;
-  box-sizing: border-box;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
 }
 
 .else-input:focus {
-  outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent);
+}
+
+.else-input::placeholder {
+  color: var(--text-mute);
 }
 
 .else-done-btn {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: var(--radius);
+  padding: 0 16px;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
   white-space: nowrap;
+  transition: background 0.12s ease;
 }
 
 .else-done-btn:hover {
-  background: #2563eb;
+  background: var(--accent-2);
 }
 
-/* ── ANYTHING ELSE SECTION ── */
-#anything-else-section {
-  text-align: left;
+/* ── LOADING screen ────────────────────────────────────────────────────── */
+#questions-loading {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
 }
 
-#anything-else-section h2 {
+/* Vertically center the loading state inside the question section body. */
+#question-section .screen-body:has(#questions-loading[style*="flex"]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-ring {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.loading-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+  animation: pa-spin 1.1s linear infinite;
+}
+
+.loading-ring__icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-title {
   font-size: 17px;
-  font-weight: bold;
-  color: #1a1a2e;
-  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px;
 }
 
-.section-subtext {
+.loading-subtitle {
   font-size: 13px;
-  color: #888;
-  margin: 0 0 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0 0 22px;
+  max-width: 260px;
 }
 
+.loading-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.loading-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(74, 158, 232, 0.18);
+}
+
+@keyframes pa-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── ANYTHING-ELSE textarea ───────────────────────────────────────────── */
 #extra-input {
   width: 100%;
-  height: 80px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  padding: 8px 10px;
-  font-size: 13px;
-  resize: vertical;
-  box-sizing: border-box;
-  margin-bottom: 4px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--text);
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+  min-height: 110px;
 }
 
-/* ── SUMMARY SECTION ── */
-#summary-section {
-  text-align: left;
+#extra-input::placeholder {
+  color: var(--text-mute);
 }
 
-#summary-section h2 {
-  font-size: 17px;
-  font-weight: bold;
-  color: #1a1a2e;
-  margin: 0 0 14px;
+#extra-input:focus {
+  border-color: var(--accent);
+}
+
+/* ── SUMMARY rows (rendered by mcq.js, classes preserved) ─────────────── */
+#summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .summary-row {
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .summary-label {
   display: block;
   font-size: 11px;
-  color: #999;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 2px;
+  color: var(--text-dim);
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-weight: 500;
 }
 
 .summary-answer {
   display: block;
   font-size: 14px;
-  color: #1a1a2e;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
 }
 
-/* ── SETTINGS SCREEN ── */
-/* Negative margins let it fill edge-to-edge over body padding */
-#settings-screen {
-  display: none;
-  background: white;
-  padding: 20px;
-  margin: -20px;
-  text-align: left;
-}
-
-#settings-screen h2 {
-  font-size: 15px;
-  color: #3b3b8a;
-  margin-top: 12px;
-  margin-bottom: 12px;
-}
-
-#api-key-input {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 13px;
-  box-sizing: border-box;
-}
-
-#save-key-btn {
-  width: 100%;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 10px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-#save-key-btn:hover {
-  background: #2563eb;
-}
-
-#save-status {
-  font-size: 12px;
-  color: #16a34a;
-  margin-top: 8px;
-  min-height: 18px;
-}
-
-#back-from-settings-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #555;
-  font-size: 13px;
-  padding: 0;
-}
-
-#back-from-settings-btn:hover {
-  color: #222;
-}
-
-/* ── Spinner ── */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-/* ── Questions loading state ── */
-#questions-loading {
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 40px 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #666;
-}
-
-#questions-loading p {
-  margin: 0;
-}
-
-/* ── Generate button loading state ── */
-#generate-btn.loading {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* ── Result section ── */
+/* ── RESULT (generated prompt) ─────────────────────────────────────────── */
 #result-section {
-  margin-top: 20px;
-}
-
-#result-section h3 {
-  font-size: 13px;
-  font-weight: bold;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0 0 8px;
+  margin-top: 24px;
 }
 
 #generated-prompt {
-  background: #f5f5f5;
-  border-radius: 8px;
-  padding: 16px;
-  font-size: 14px;
-  line-height: 1.5;
-  user-select: text;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
   word-wrap: break-word;
-  color: #1a1a2e;
+  user-select: text;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
-#copy-btn {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 8px;
-}
-
-#copy-btn:hover {
-  background: #2563eb;
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 #copy-confirmation {
   font-size: 12px;
-  color: #16a34a;
-  margin-left: 8px;
+  color: var(--accent);
+  font-family: 'Space Mono', ui-monospace, monospace;
 }
 
-/* ── Floating Pill (content script / shadow DOM) ────────────────────────────
-   These rules are rendered from the shadow-DOM style block inside content.js.
-   This section is the canonical design record — keep it in sync with content.js
-   so any visual changes can be reviewed here alongside the popup styles.
-   ────────────────────────────────────────────────────────────────────────── */
+/* ── Footer (decorative shortcuts + version) ──────────────────────────── */
+.popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding: 10px 20px;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text-mute);
+}
 
-/* Host wrapper: fixed, max-content width, z-index 2147483647 */
+.footer-shortcuts {
+  letter-spacing: 0.02em;
+}
 
-/* Pill container */
+.kbd {
+  color: var(--text-dim);
+}
+
+.footer-version {
+  color: var(--text-mute);
+}
+
+/* ── Settings overlay ──────────────────────────────────────────────────── */
+#settings-screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  padding: 20px;
+  z-index: 10;
+  flex-direction: column;
+}
+
+#settings-screen h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 16px 0 16px;
+}
+
+#back-from-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 4px 0;
+  font-family: inherit;
+  align-self: flex-start;
+  transition: color 0.12s ease;
+}
+
+#back-from-settings-btn:hover {
+  color: var(--text);
+}
+
+#api-key-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+}
+
+#api-key-input::placeholder {
+  color: var(--text-mute);
+}
+
+#api-key-input:focus {
+  border-color: var(--accent);
+}
+
+#save-key-btn {
+  width: 100%;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: background 0.12s ease;
+}
+
+#save-key-btn:hover {
+  background: var(--accent-2);
+}
+
+#save-status {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 10px;
+  min-height: 16px;
+  font-family: 'Space Mono', ui-monospace, monospace;
+}
+
+/* ── Floating Pill (content script / shadow DOM) ────────────────────────
+   Canonical design record — keep in sync with content.js shadow-DOM styles.
+   ──────────────────────────────────────────────────────────────────────── */
+
 .pa-pill {
   display: inline-flex;
   align-items: center;
@@ -460,7 +877,6 @@ body {
   position: relative;
 }
 
-/* Left (action) half — [icon] [label] */
 .pa-pill__left {
   display: flex;
   align-items: center;
@@ -478,7 +894,6 @@ body {
   background: #f0f4ff;
 }
 
-/* Extension icon — 28×28px image */
 .pa-pill__icon {
   width: 28px;
   height: 28px;
@@ -487,7 +902,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Fallback span when chrome.runtime is unavailable */
 .pa-pill__icon--fallback {
   display: flex;
   align-items: center;
@@ -506,7 +920,6 @@ body {
   white-space: nowrap;
 }
 
-/* Divider between the two halves */
 .pa-pill__divider {
   width: 1px;
   height: 18px;
@@ -514,7 +927,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Right (chevron) half */
 .pa-pill__chevron {
   display: flex;
   align-items: center;
@@ -535,7 +947,6 @@ body {
   color: #1a1a2e;
 }
 
-/* Dropdown panel — appears above the pill */
 .pa-dropdown {
   position: absolute;
   bottom: calc(100% + 5px);
@@ -548,7 +959,6 @@ body {
   overflow: hidden;
 }
 
-/* Dropdown rows */
 .pa-dropdown__item {
   display: flex;
   align-items: center;
