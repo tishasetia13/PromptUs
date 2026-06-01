@@ -9,10 +9,6 @@ import { syncUser, incrementUsage } from "./db.js";
 
 console.log("Prompt Assistant popup loaded successfully!");
 
-// ── Element references ──────────────────────────────────────────────────────
-
-const generateBtn = document.getElementById("generate-btn");
-
 // ── Section switcher (within main-screen) ──────────────────────────────────
 
 const SECTIONS = [
@@ -36,27 +32,34 @@ function showSection(id) {
 let currentUser = null; // holds the signed-in user for the whole session
 
 (async () => {
-  const user = await getCurrentUser();
+  try {
+    const user = await getCurrentUser();
 
-  if (!user) {
-    // No user — show the auth screen, keep main-screen hidden
+    if (!user) {
+      // No user — show the auth screen, keep main-screen hidden
+      document.getElementById("auth-section").style.display = "block";
+      document.getElementById("main-screen").style.display  = "none";
+      return;
+    }
+
+    // User is already signed in — proceed with the normal startup flow
+    currentUser = user;
+    document.getElementById("auth-section").style.display = "none";
+    document.getElementById("main-screen").style.display  = "block";
+    await runStartupPrefill();
+  } catch (err) {
+    // If the auth check itself fails, show the sign-in screen as a safe fallback
+    console.error("Auth gate error:", err);
     document.getElementById("auth-section").style.display = "block";
     document.getElementById("main-screen").style.display  = "none";
-    return;
   }
-
-  // User is already signed in — proceed with the normal startup flow
-  currentUser = user;
-  document.getElementById("auth-section").style.display = "none";
-  document.getElementById("main-screen").style.display  = "block";
-  await runStartupPrefill();
 })();
 
 // ── Sign-in button ─────────────────────────────────────────────────────────
 
 document.getElementById("signin-btn").addEventListener("click", async () => {
-  const btn       = document.getElementById("signin-btn");
-  const errorEl   = document.getElementById("auth-error");
+  const btn     = document.getElementById("signin-btn");
+  const errorEl = document.getElementById("auth-error");
 
   btn.disabled    = true;
   btn.textContent = "Signing in...";
@@ -139,10 +142,10 @@ const ICON_VIDEO  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"
 const ICON_WEBDEV = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 8 3 12 8 16"/><polyline points="16 8 21 12 16 16"/><line x1="14" y1="5" x2="10" y2="19"/></svg>`;
 
 const CATEGORIES = [
-  { key: 'text',   icon: ICON_TEXT,   label: 'Text',   desc: 'Long-form, chat, code, analysis', name: 'AI text tools like ChatGPT, Claude, and Gemini' },
-  { key: 'image',  icon: ICON_IMAGE,  label: 'Image',  desc: 'Stills, illustrations, photography', name: 'AI image generators like Midjourney, DALL·E, and Flux' },
-  { key: 'video',  icon: ICON_VIDEO,  label: 'Video',  desc: 'Motion, cinematics, b-roll',         name: 'AI video generators like Sora, Kling, and Seedance' },
-  { key: 'webdev', icon: ICON_WEBDEV, label: 'Webdev', desc: 'Apps, sites, components',            name: 'AI app builders like Lovable, Bolt, and v0' },
+  { key: 'text',   icon: ICON_TEXT,   label: 'Text',   desc: 'Long-form, chat, code, analysis',      name: 'AI text tools like ChatGPT, Claude, and Gemini' },
+  { key: 'image',  icon: ICON_IMAGE,  label: 'Image',  desc: 'Stills, illustrations, photography',   name: 'AI image generators like Midjourney, DALL·E, and Flux' },
+  { key: 'video',  icon: ICON_VIDEO,  label: 'Video',  desc: 'Motion, cinematics, b-roll',            name: 'AI video generators like Sora, Kling, and Seedance' },
+  { key: 'webdev', icon: ICON_WEBDEV, label: 'Webdev', desc: 'Apps, sites, components',               name: 'AI app builders like Lovable, Bolt, and v0' },
 ];
 
 const categoryOptions = document.getElementById("category-options");
@@ -260,9 +263,11 @@ document.getElementById("summary-back-btn").addEventListener("click", () => {
 
 // ── Generate button: enforce free tier, then call Gemini ─────────────────
 
-generateBtn.addEventListener("click", async () => {
+document.getElementById("generate-btn").addEventListener("click", async () => {
+  // Reference the button locally — safe even if other parts of the script failed
+  const generateBtn = document.getElementById("generate-btn");
 
-  // ── Step 5: Check usage limit before doing anything ──────────────────
+  // ── Check usage limit before doing anything ───────────────────────────
   try {
     const newCount = await incrementUsage(currentUser.google_id);
 
@@ -273,7 +278,7 @@ generateBtn.addEventListener("click", async () => {
     if (newCount > 10 && !isPro) {
       // Over the limit — show paywall, hide generate button
       document.getElementById("paywall-section").style.display = "block";
-      document.getElementById("generate-btn").style.display    = "none";
+      generateBtn.style.display = "none";
       return; // stop here — do NOT call Gemini
     }
   } catch (err) {
@@ -281,7 +286,7 @@ generateBtn.addEventListener("click", async () => {
     console.warn("Usage tracking error:", err.message);
   }
 
-  // ── Normal generation flow (unchanged from original) ─────────────────
+  // ── Normal generation flow ────────────────────────────────────────────
   generateBtn.classList.add("loading");
   generateBtn.textContent = "Generating...";
 
