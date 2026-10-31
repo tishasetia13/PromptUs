@@ -1,89 +1,59 @@
-# Prompt Assistant — Chrome Extension
+# PromptUs
 
-A beginner-friendly Chrome extension built with Manifest V3.
+A Chrome extension that turns a rough idea into a detailed, well-structured prompt for AI tools.
 
----
+You describe what you want in a sentence. PromptUs asks you a few multiple-choice questions written for your specific idea, then writes the final prompt and places it straight into the text box of the AI site you are on.
 
-## Build log
+**Status:** working as an unpacked Chrome extension. Not published on the Chrome Web Store.
 
-### Phase 0 — Extension skeleton ✅
-Basic working extension: popup loads, icon shows in toolbar, console log confirms it's alive.
+## How it works
 
-### Phase 1 — Platform detector ✅
-Added a content script (`content.js`) that runs on Midjourney.com and detects the current platform. The popup now queries the active tab and displays a colour-coded status badge:
+1. **Sign in with Google.** The extension uses Chrome's identity API. On first sign-in, a user record is created in Supabase to track how many prompts you have generated.
+2. **Describe your goal.** If you have already typed something into the AI site's text box, PromptUs reads it and prefills it. Otherwise you type it in the popup.
+3. **Pick a category:** Text, Image, Video or Webdev. This tells the model what kind of tool the prompt is for, since a prompt for an image generator needs different details than a prompt for an app builder.
+4. **Answer follow-up questions.** The backend asks Gemini to write questions specific to your idea. Each question has suggested options plus a free-text answer. The number of questions depends on how much detail your idea already has, and can be zero.
+5. **Add extra notes** and review a summary of everything you answered.
+6. **Generate.** Gemini writes the final prompt, treating your original idea as the main source of truth and your answers as refinements. The prompt appears in the popup with a Copy button and is also inserted into the text box on the page.
 
-- **✅ Midjourney detected!** (green) — shown when the user is on midjourney.com
-- **❌ No supported AI platform detected on this tab** (red) — shown on all other pages
+## Architecture
 
-**Files added / changed in Phase 1:**
+| Part | What it does |
+|------|--------------|
+| Popup (`popup.html`, `popup.js`, `popup.css`, `mcq.js`) | The screens and the question flow |
+| Content script (`content.js`) | Runs on the web page. Reads the text in the page's active text box, and writes the generated prompt back into it |
+| Backend (`promptus-backend`, Express on Vercel) | One endpoint, `POST /api/generate`, with `type` set to `questions` or `prompt`. Calls Gemini, so the API key never reaches the user's browser |
+| Database (Supabase) | A `users` table storing Google ID, email, name, usage count and plan |
+| Auth (`auth.js`) | Google sign-in through `chrome.identity` |
 
-| File | What changed |
-|------|-------------|
-| `content.js` | New file. Detects the platform from `window.location.hostname` and listens for messages from the popup. |
-| `manifest.json` | Registered `content.js` as a content script for `*.midjourney.com`; added `activeTab` permission. |
-| `popup.js` | Queries the active tab, sends a `getPlatform` message to the content script, and updates the UI with the result. |
-| `popup.html` | Added `#platform-status` element that shows the detection result. |
-| `popup.css` | Styled `#platform-status` with a neutral default and green/red variants for detected/not-detected states. |
+### Inserting text into AI chat sites
 
-### Phase 3.2 — Pass original intent to prompt generation ✅
-Fixed a data-loss bug where the user's original brief was never sent to Gemini during prompt generation. `generatePrompt` now receives `userIntent` as a parameter, includes it as `ORIGINAL BRIEF FROM USER` in the INPUTS block (before the Q&A answers), and a new STEP 0 instructs Gemini to treat it as the primary source of truth.
+Many AI chat sites are built with React, which does not notice when a script simply sets a text box's value. The content script sets the value through the browser's native input setter and then fires `input` and `change` events, so React registers the change. For rich-text editors (`contenteditable` elements), it uses the browser's own `insertText` editing command instead.
 
-### Phase 3.1 — Question rendering polish ✅
-Removed redundant "Something else" option from Gemini's question output (the free-text box already serves that purpose). Made the free-text input placeholder context-aware: "Or type your own answer..." when options exist, "Type your answer..." when they don't.
+## Tech stack
 
-### Phase 3 — Smarter Gemini prompts ✅
-Rewrote both the question-generation and final-prompt-generation Gemini prompts. Replaced loose instruction lists with explicit step-by-step workflows. Added a foundational → structural → refining tier model so questions and final prompts both flow from basics to refinements. Restructured category blocks to use the same tier model. Questions can now be variable in count (including zero), and options are optional with a mandatory "Something else" escape when present.
+| Layer | Choice |
+|-------|--------|
+| Extension | Chrome Extension, Manifest V3, plain JavaScript, HTML, CSS |
+| LLM | Gemini API (called from the backend) |
+| Backend | Node.js, Express, deployed on Vercel |
+| Database | Supabase (Postgres, accessed through its REST API) |
+| Auth | Google OAuth through `chrome.identity` |
 
-### Phase 2.6 — Category-first UX refactor ✅
-Replaced platform detection with user-driven category selection. The popup now shows four buttons (Text, Image, Video, Webdev) instead of trying to detect which AI platform the user is on. This is more reliable, more intuitive, and works on any tab.
+## Run it locally
 
-**What changed:**
-- `popup.html` — Removed platform status badge, added four category buttons
-- `popup.css` — Added category button grid styles, removed platform badge styles
-- `popup.js` — Replaced platform detection logic with category button click handlers
-- `content.js` — Gutted (reserved for future use)
-- `manifest.json` — Removed content_scripts, simplified permissions
+1. Clone this repo.
+2. Open Chrome and go to `chrome://extensions`.
+3. Turn on **Developer mode** (top right).
+4. Click **Load unpacked** and select the project folder.
+5. Pin PromptUs from the puzzle-piece menu in the toolbar.
 
----
+Note: Google sign-in only works with an OAuth client ID registered for the extension's ID. To run your own copy, you need your own Google OAuth client, Supabase project and backend deployment, and you need to replace the values in `manifest.json`, `db.js` and `gemini.js`.
 
-## What each file does
+## Limitations
 
-| File | Purpose |
-|------|---------|
-| `manifest.json` | The **ID card** of the extension. Chrome reads this first. It declares the name, version, which HTML file to use as the popup, which pages to inject scripts into, and where the icon lives. |
-| `popup.html` | The **page** that appears when you click the extension icon in the toolbar. Like any web page: HTML for structure, CSS for style, JS for behaviour. |
-| `popup.css` | **Styles** for the popup — sets the width, background colour, font, and the platform status badge colours. |
-| `popup.js` | **JavaScript** that runs inside the popup. Asks the active tab which platform is detected and updates the status badge. |
-| `content.js` | **Content script** injected into Midjourney pages. Detects the platform and responds to messages from the popup. |
-| `icons/icon128.png` | The **toolbar icon** Chrome displays next to the address bar. 128 × 128 pixels. |
-
----
-
-## How to load the extension into Chrome (Mac)
-
-1. Open Chrome and go to this address in the URL bar:
-   ```
-   chrome://extensions
-   ```
-
-2. In the top-right corner, turn on **Developer mode** (toggle switch).
-
-3. Click the **"Load unpacked"** button that appears on the left.
-
-4. In the file picker, navigate to this folder (`prompt-assistant`) and click **Open** (or **Select Folder**).
-
-5. The extension now appears in the list. Click the **puzzle-piece icon** (🧩) in the Chrome toolbar, find "Prompt Assistant", and pin it so it's always visible.
-
-6. Click the extension icon — you should see the popup with **"Prompt Assistant is alive 🎉"**.
-
----
-
-## Making changes
-
-After editing any file, go back to `chrome://extensions` and click the **refresh icon** (↺) on the Prompt Assistant card to reload it. Then close and reopen the popup to see your changes.
-
----
-
-## Inspecting the popup (DevTools)
-
-Right-click anywhere inside the popup and choose **Inspect** to open Chrome DevTools for the popup. The **Console** tab will show the log message from `popup.js`.
+- **The free-tier limit is checked in the extension, not on the backend.** Someone could bypass the 10-prompt limit by calling the backend directly or editing local storage. A real release would check usage on the server.
+- **Usage tracking fails open.** If the database call fails, generation is still allowed.
+- **Text insertion uses `document.execCommand`,** which browsers have deprecated. It could stop working if browsers remove it or sites change their editors.
+- **The content script runs on every page** (`<all_urls>`) so it can work on any AI site. A store release would narrow this to specific sites.
+- **The Upgrade and History buttons are placeholders.** There are no payments, and history is not built yet.
+- **Not published** on the Chrome Web Store.
